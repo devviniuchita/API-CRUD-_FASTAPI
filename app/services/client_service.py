@@ -1,5 +1,6 @@
 # stdlib
 from datetime import datetime
+from typing import NoReturn
 
 # third-party
 from bson import ObjectId
@@ -24,7 +25,7 @@ class ClientService:
             )
 
     @staticmethod
-    def _handle_duplicate(exc: DuplicateFieldError) -> None:
+    def _handle_duplicate(exc: DuplicateFieldError) -> NoReturn:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"Campo '{exc.field}' já cadastrado.",
@@ -71,7 +72,7 @@ class ClientService:
             result = await self.repo.update(id, data)
         except DuplicateFieldError as exc:
             self._handle_duplicate(exc)
-        return result  # type: ignore[return-value]
+        return result
 
     async def patch_client(self, id: str, payload: ClientUpdate) -> dict:
         """Partial update (PATCH). Only updates fields that were explicitly sent."""
