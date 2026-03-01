@@ -4,6 +4,7 @@ from typing import Optional
 # third-party
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorCollection
+from pymongo.errors import DuplicateKeyError as MongoDuplicateKeyError
 from pymongo.errors import PyMongoError
 
 
@@ -49,10 +50,9 @@ class ClientRepository:
             result = await self.collection.insert_one(data)
             created = await self.collection.find_one({"_id": result.inserted_id})
             return self._serialize(created)  # type: ignore[arg-type]
-        except PyMongoError as exc:
-            details = getattr(exc, "details", {}) or {}
-            if details.get("code") == 11000:
-                raise DuplicateFieldError(self._extract_duplicate_field(exc)) from exc
+        except MongoDuplicateKeyError as exc:
+            raise DuplicateFieldError(self._extract_duplicate_field(exc)) from exc
+        except PyMongoError:
             raise
 
     async def find_all(self) -> list[dict]:

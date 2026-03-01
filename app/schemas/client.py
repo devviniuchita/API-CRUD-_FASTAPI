@@ -13,16 +13,16 @@ class ClientCreate(BaseModel):
         ...,
         min_length=2,
         max_length=100,
-        example="João Silva",
+        json_schema_extra={"example": "João Silva"},
     )
     email: EmailStr = Field(
         ...,
-        example="joao.silva@email.com",
+        json_schema_extra={"example": "joao.silva@email.com"},
     )
     document: str = Field(
         ...,
-        example="123.456.789-09",
         description="CPF (000.000.000-00) ou CNPJ (00.000.000/0000-00)",
+        json_schema_extra={"example": "123.456.789-09"},
     )
 
     @field_validator("document")
@@ -43,16 +43,16 @@ class ClientUpdate(BaseModel):
         None,
         min_length=2,
         max_length=100,
-        example="Maria Souza",
+        json_schema_extra={"example": "Maria Souza"},
     )
     email: Optional[EmailStr] = Field(
         None,
-        example="maria.souza@email.com",
+        json_schema_extra={"example": "maria.souza@email.com"},
     )
     document: Optional[str] = Field(
         None,
-        example="12.345.678/0001-95",
         description="CPF (000.000.000-00) ou CNPJ (00.000.000/0000-00)",
+        json_schema_extra={"example": "12.345.678/0001-95"},
     )
 
     @field_validator("document", mode="before")
@@ -73,21 +73,9 @@ class ClientUpdate(BaseModel):
 class ClientResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: str = Field(
-        ...,
-        example="60b8d295f1d2c3e4a5b6c7d8",
-    )
-    name: str = Field(
-        ...,
-        example="João Silva",
-    )
-    email: str = Field(
-        ...,
-        example="joao.silva@email.com",
-    )
-    document: str = Field(
-        ...,
-        example="123.456.789-09",
-    )
+    id: str = Field(..., json_schema_extra={"example": "60b8d295f1d2c3e4a5b6c7d8"})
+    name: str = Field(..., json_schema_extra={"example": "João Silva"})
+    email: str = Field(..., json_schema_extra={"example": "joao.silva@email.com"})
+    document: str = Field(..., json_schema_extra={"example": "123.456.789-09"})
     created_at: datetime
     updated_at: datetime
