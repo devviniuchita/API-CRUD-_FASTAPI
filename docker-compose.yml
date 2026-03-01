@@ -1,0 +1,16 @@
+services:
+  mongodb:
+    # mongo:4.4 (última versão que não exige AVX no CPU).
+    # Mongo 5.0+ requer AVX — CPU suporte AVX = mongo: 7+
+    image: mongo:4.4
+    container_name: mongodb
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "${MONGO_PORT:-27017}:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:

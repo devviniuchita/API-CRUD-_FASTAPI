@@ -1,0 +1,101 @@
+# =============================================================
+# .dockerignore — FastAPI + MongoDB (Docker Compose)
+# Exclui arquivos desnecessários do build context Docker
+# para builds mais rápidos, imagens menores e maior segurança.
+# =============================================================
+
+# ── Controle de versão ────────────────────────────────────────
+.git
+.gitignore
+.gitattributes
+.github/
+
+# ── Ambientes virtuais Python ─────────────────────────────────
+.venv/
+venv/
+env/
+ENV/
+.env.local
+.env.*.local
+
+# ── Ferramentas / IDEs ────────────────────────────────────────
+.vscode/
+.idea/
+.qode/
+*.swp
+*.swo
+*~
+
+# ── Cache e bytecode Python ───────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+.mypy_cache/
+.ruff_cache/
+.dmypy.json
+dmypy.json
+
+# ── Testes e relatórios de cobertura ─────────────────────────
+.pytest_cache/
+.tox/
+.nox/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+nosetests.xml
+
+# ── Build / Distribuição Python ───────────────────────────────
+dist/
+build/
+*.egg-info/
+*.egg
+MANIFEST
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+
+# ── Segurança — nunca copiar secrets para a imagem ───────────
+.env
+.env.*
+secrets/
+*.pem
+*.key
+*.crt
+*.p12
+
+# ── Documentação ─────────────────────────────────────────────
+docs/
+*.md
+README*
+CHANGELOG*
+CONTRIBUTING*
+LICENSE*
+
+# ── Docker (não precisa dentro da imagem) ────────────────────
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# ── Logs e temporários ───────────────────────────────────────
+*.log
+*.tmp
+*.bak
+*.swp
+tmp/
+temp/
+
+# ── Notebooks Jupyter ────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb
+
+# ── Sistemas operacionais ─────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
