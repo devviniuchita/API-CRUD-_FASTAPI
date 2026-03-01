@@ -2,6 +2,7 @@
 import re
 
 from datetime import datetime
+from typing import Annotated
 from typing import Optional
 
 # third-party
@@ -54,21 +55,23 @@ class ClientCreate(BaseModel):
 
 # ── ClientUpdate ──────────────────────────────────────────────
 class ClientUpdate(BaseModel):
-    name: Optional[str] = Field(
-        None,
-        min_length=2,
-        max_length=100,
-        json_schema_extra={"example": _EX_NAME_UPDATE},
-    )
-    email: Optional[EmailStr] = Field(
-        None,
-        json_schema_extra={"example": _EX_EMAIL_UPDATE},
-    )
-    document: Optional[str] = Field(
-        None,
-        description="CPF (000.000.000-00) ou CNPJ (00.000.000/0000-00)",
-        json_schema_extra={"example": _EX_CNPJ},
-    )
+    name: Annotated[
+        Optional[str],
+        Field(
+            min_length=2, max_length=100, json_schema_extra={"example": _EX_NAME_UPDATE}
+        ),
+    ] = None
+    email: Annotated[
+        Optional[EmailStr],
+        Field(json_schema_extra={"example": _EX_EMAIL_UPDATE}),
+    ] = None
+    document: Annotated[
+        Optional[str],
+        Field(
+            description="CPF (000.000.000-00) ou CNPJ (00.000.000/0000-00)",
+            json_schema_extra={"example": _EX_CNPJ},
+        ),
+    ] = None
 
     @field_validator("document", mode="before")
     @classmethod
@@ -92,10 +95,5 @@ class ClientResponse(BaseModel):
     name: str = Field(..., json_schema_extra={"example": _EX_NAME})
     email: str = Field(..., json_schema_extra={"example": _EX_EMAIL})
     document: str = Field(..., json_schema_extra={"example": _EX_CPF})
-    created_at: datetime
-    updated_at: datetime
-    name: str = Field(..., json_schema_extra={"example": "João Silva"})
-    email: str = Field(..., json_schema_extra={"example": "joao.silva@email.com"})
-    document: str = Field(..., json_schema_extra={"example": "123.456.789-09"})
     created_at: datetime
     updated_at: datetime

@@ -94,4 +94,3 @@ async def test_delete_client_not_found_raises_404(
         await client_service.delete_client("000000000000000000000000")
 
     assert exc_info.value.status_code == 404
-    assert exc_info.value.status_code == 404
