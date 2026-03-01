@@ -19,9 +19,28 @@ ENV/
 .env.*.local
 
 # ── Ferramentas / IDEs ────────────────────────────────────────
-.vscode/
+.agent/
 .idea/
+.vscode/
+.github/
+.claude/
+.qodo/
 .qode/
+.kilo/
+.cursorrules
+.cursor/
+.kiro/
+.trae/
+.gemini/
+.kilocode/
+.clinerules/
+.qoder/
+.roo/
+.windsurf/
+.codex/
+AGENT.md
+GEMINI.md
+CLAUDE.md
 *.swp
 *.swo
 *~
