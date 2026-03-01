@@ -3,9 +3,11 @@ import logging
 import time
 
 # third-party
-from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.middleware.base import RequestResponseEndpoint
 from starlette.requests import Request
 from starlette.responses import Response
+
 
 logger = logging.getLogger("api.access")
 

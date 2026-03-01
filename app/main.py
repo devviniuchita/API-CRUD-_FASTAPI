@@ -1,17 +1,22 @@
 # stdlib
 import logging
 import logging.config
+
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
+# local
+from app.core.logging import RequestLoggingMiddleware
+from app.db.mongo import close_mongo_connection
+from app.db.mongo import connect_to_mongo
+
 # third-party
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI
+from fastapi import HTTPException
+from fastapi import Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-# local
-from app.core.logging import RequestLoggingMiddleware
-from app.db.mongo import close_mongo_connection, connect_to_mongo
 
 # ── Logging configuration ─────────────────────────────────────
 logging.basicConfig(
@@ -28,7 +33,7 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await connect_to_mongo()
     yield
-    await close_mongo_connection()
+    close_mongo_connection()
 
 
 # ── Application factory ───────────────────────────────────────
@@ -43,7 +48,10 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# ── Middlewares ───────────────────────────────────────────────
+# ── Middlewares (added in reverse execution order: last added = first executed) ──
+# RequestLoggingMiddleware runs first on request, last on response
+# CORSMiddleware must be last in add_middleware chain (outermost layer)
+app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -51,7 +59,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.add_middleware(RequestLoggingMiddleware)
 
 
 # ── Global HTTP exception handler ────────────────────────────
@@ -65,4 +72,10 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
 
 # ── Routers (registered here — clients router added by Agente 2) ──
 # from app.api.routes.clients import router as clients_router
+# app.include_router(clients_router)
+
+
+# ── Routers (registered here — clients router added by Agente 2) ──
+# from app.api.routes.clients import router as clients_router
+# app.include_router(clients_router)
 # app.include_router(clients_router)

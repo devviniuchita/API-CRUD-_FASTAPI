@@ -1,12 +1,15 @@
 # stdlib
 import logging
 
-# third-party
-from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
-from pymongo import ASCENDING, IndexModel
-
 # local
 from app.core.config import settings
+
+# third-party
+from motor.motor_asyncio import AsyncIOMotorClient
+from motor.motor_asyncio import AsyncIOMotorDatabase
+from pymongo import ASCENDING
+from pymongo import IndexModel
+
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +32,7 @@ async def connect_to_mongo() -> None:
 
 async def _create_indexes() -> None:
     """Create unique indexes for email and document fields in the clients collection."""
+    assert _db is not None, "_db must be initialised before creating indexes"
     collection = _db["clients"]
 
     indexes = [
@@ -40,7 +44,7 @@ async def _create_indexes() -> None:
     logger.info("Unique indexes ensured: email, document")
 
 
-async def close_mongo_connection() -> None:
+def close_mongo_connection() -> None:
     """Close the Motor client gracefully."""
     global _client, _db
 
