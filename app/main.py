@@ -70,12 +70,6 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
     )
 
 
-# ── Routers (registered here — clients router added by Agente 2) ──
+# ── Routers (registrar aqui — clients router adicionado pelo Agente 2) ──
 # from app.api.routes.clients import router as clients_router
-# app.include_router(clients_router)
-
-
-# ── Routers (registered here — clients router added by Agente 2) ──
-# from app.api.routes.clients import router as clients_router
-# app.include_router(clients_router)
 # app.include_router(clients_router)
