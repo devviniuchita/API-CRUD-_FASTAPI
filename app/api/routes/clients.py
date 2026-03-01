@@ -1,12 +1,16 @@
 # third-party
-from fastapi import APIRouter, Depends, Response, status
-from motor.motor_asyncio import AsyncIOMotorDatabase
-
 # local
 from app.db.mongo import get_database
 from app.repositories.client_repo import ClientRepository
-from app.schemas.client import ClientCreate, ClientResponse, ClientUpdate
+from app.schemas.client import ClientCreate
+from app.schemas.client import ClientResponse
+from app.schemas.client import ClientUpdate
 from app.services.client_service import ClientService
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import Response
+from fastapi import status
+from motor.motor_asyncio import AsyncIOMotorDatabase
 
 
 # ── Dependency factory ────────────────────────────────────────
@@ -35,7 +39,8 @@ async def create_client(
     payload: ClientCreate,
     service: ClientService = Depends(get_client_service),
 ) -> ClientResponse:
-    return await service.create_client(payload)
+    result = await service.create_client(payload)
+    return ClientResponse.model_validate(result)
 
 
 @router.get(
@@ -47,7 +52,8 @@ async def create_client(
 async def list_clients(
     service: ClientService = Depends(get_client_service),
 ) -> list[ClientResponse]:
-    return await service.list_clients()
+    results = await service.list_clients()
+    return [ClientResponse.model_validate(c) for c in results]
 
 
 @router.get(
@@ -64,7 +70,8 @@ async def get_client(
     id: str,
     service: ClientService = Depends(get_client_service),
 ) -> ClientResponse:
-    return await service.get_client_by_id(id)
+    result = await service.get_client_by_id(id)
+    return ClientResponse.model_validate(result)
 
 
 @router.put(
@@ -84,7 +91,8 @@ async def update_client(
     payload: ClientCreate,
     service: ClientService = Depends(get_client_service),
 ) -> ClientResponse:
-    return await service.update_client(id, payload)
+    result = await service.update_client(id, payload)
+    return ClientResponse.model_validate(result)
 
 
 @router.patch(
@@ -104,7 +112,8 @@ async def patch_client(
     payload: ClientUpdate,
     service: ClientService = Depends(get_client_service),
 ) -> ClientResponse:
-    return await service.patch_client(id, payload)
+    result = await service.patch_client(id, payload)
+    return ClientResponse.model_validate(result)
 
 
 @router.delete(

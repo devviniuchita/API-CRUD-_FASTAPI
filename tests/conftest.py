@@ -1,11 +1,12 @@
 # third-party
 import pytest
-from mongomock_motor import AsyncMongoMockClient
-from pymongo import ASCENDING, IndexModel
 
 # local
 from app.repositories.client_repo import ClientRepository
 from app.services.client_service import ClientService
+from mongomock_motor import AsyncMongoMockClient
+from pymongo import ASCENDING
+from pymongo import IndexModel
 
 
 @pytest.fixture

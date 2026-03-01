@@ -1,12 +1,13 @@
 # stdlib
 import pytest
 
+# local
+from app.schemas.client import ClientCreate
+from app.schemas.client import ClientUpdate
+from app.services.client_service import ClientService
+
 # third-party
 from fastapi import HTTPException
-
-# local
-from app.schemas.client import ClientCreate, ClientUpdate
-from app.services.client_service import ClientService
 
 
 # ── Helpers ───────────────────────────────────────────────────
@@ -92,4 +93,5 @@ async def test_delete_client_not_found_raises_404(
     with pytest.raises(HTTPException) as exc_info:
         await client_service.delete_client("000000000000000000000000")
 
+    assert exc_info.value.status_code == 404
     assert exc_info.value.status_code == 404

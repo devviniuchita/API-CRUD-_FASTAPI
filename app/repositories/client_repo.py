@@ -52,8 +52,6 @@ class ClientRepository:
             return self._serialize(created)  # type: ignore[arg-type]
         except MongoDuplicateKeyError as exc:
             raise DuplicateFieldError(self._extract_duplicate_field(exc)) from exc
-        except PyMongoError:
-            raise
 
     async def find_all(self) -> list[dict]:
         cursor = self.collection.find({})
@@ -72,9 +70,7 @@ class ClientRepository:
 
     async def patch(self, id: str, data: dict) -> Optional[dict]:
         """Partial update (PATCH). Returns updated doc or None if not found."""
-        result = await self.collection.update_one(
-            {"_id": ObjectId(id)}, {"$set": data}
-        )
+        result = await self.collection.update_one({"_id": ObjectId(id)}, {"$set": data})
         if result.matched_count == 0:
             return None
         return await self.find_by_id(id)

@@ -1,14 +1,18 @@
 # stdlib
 from datetime import datetime
+from datetime import timezone
 from typing import NoReturn
+
+# local
+from app.repositories.client_repo import ClientRepository
+from app.repositories.client_repo import DuplicateFieldError
+from app.schemas.client import ClientCreate
+from app.schemas.client import ClientUpdate
 
 # third-party
 from bson import ObjectId
-from fastapi import HTTPException, status
-
-# local
-from app.repositories.client_repo import ClientRepository, DuplicateFieldError
-from app.schemas.client import ClientCreate, ClientUpdate
+from fastapi import HTTPException
+from fastapi import status
 
 
 class ClientService:
@@ -33,7 +37,7 @@ class ClientService:
 
     # ── CRUD ──────────────────────────────────────────────────
     async def create_client(self, payload: ClientCreate) -> dict:
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         data = payload.model_dump()
         data["created_at"] = now
         data["updated_at"] = now
@@ -67,11 +71,16 @@ class ClientService:
             )
         data = payload.model_dump()
         data["created_at"] = existing["created_at"]
-        data["updated_at"] = datetime.utcnow()
+        data["updated_at"] = datetime.now(timezone.utc)
         try:
             result = await self.repo.update(id, data)
         except DuplicateFieldError as exc:
             self._handle_duplicate(exc)
+        if result is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Cliente '{id}' não encontrado.",
+            )
         return result
 
     async def patch_client(self, id: str, payload: ClientUpdate) -> dict:
@@ -83,7 +92,7 @@ class ClientService:
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="Nenhum campo fornecido para atualização.",
             )
-        update_data["updated_at"] = datetime.utcnow()
+        update_data["updated_at"] = datetime.now(timezone.utc)
         try:
             result = await self.repo.patch(id, update_data)
         except DuplicateFieldError as exc:
