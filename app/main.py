@@ -9,13 +9,19 @@ from typing import AsyncGenerator
 from app.core.logging import RequestLoggingMiddleware
 from app.db.mongo import close_mongo_connection
 from app.db.mongo import connect_to_mongo
+from app.db.mongo import get_database
 
 # third-party
+from fastapi import Depends
 from fastapi import FastAPI
 from fastapi import HTTPException
 from fastapi import Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.docs import get_redoc_html
+from fastapi.responses import HTMLResponse
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
+from motor.motor_asyncio import AsyncIOMotorDatabase
 from pymongo.errors import PyMongoError
 from pymongo.errors import ServerSelectionTimeoutError
 
@@ -44,10 +50,11 @@ app = FastAPI(
     description="API RESTful de gerenciamento de clientes — Positivo S+",
     version="1.0.0",
     contact={
-        "name": "Cauã Barros",
-        "email": "cauabarros.dev@gmail.com",
+        "name": "Vinícius Vieira",
+        "url": "https://github.com/devviniuchita",
     },
     lifespan=lifespan,
+    redoc_url=None,  # desativado: servido localmente via rota customizada
 )
 
 # ── Middlewares (added in reverse execution order: last added = first executed) ──
@@ -90,6 +97,47 @@ async def mongo_error_handler(request: Request, exc: PyMongoError) -> JSONRespon
         status_code=503,
         content={"detail": "Service temporarily unavailable. Database error."},
     )
+
+
+# ── Static files (ReDoc bundle offline) ───────────────────────
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
+
+
+# ── ReDoc (bundle servido localmente — sem dependência de CDN) ─
+@app.get("/redoc", include_in_schema=False)
+async def redoc_html() -> HTMLResponse:
+    return get_redoc_html(
+        openapi_url="/openapi.json",
+        title="Clients API — ReDoc",
+        redoc_js_url="/static/redoc.standalone.js",
+    )
+
+
+# ── Health check ──────────────────────────────────────────────
+@app.get(
+    "/health",
+    tags=["Health"],
+    summary="Verificar saúde da API e conectividade com o banco de dados",
+    responses={
+        200: {"description": "API e banco de dados operacionais"},
+        503: {"description": "Banco de dados inacessível"},
+    },
+)
+async def health_check(
+    db: AsyncIOMotorDatabase = Depends(get_database),
+) -> JSONResponse:
+    try:
+        await db.command("ping")
+        return JSONResponse(
+            status_code=200,
+            content={"status": "ok", "database": "ok"},
+        )
+    except Exception as exc:
+        logger.warning("Health check — MongoDB unreachable: %s", exc)
+        return JSONResponse(
+            status_code=503,
+            content={"status": "degraded", "database": "unreachable"},
+        )
 
 
 # ── Routers ───────────────────────────────────────────────────
