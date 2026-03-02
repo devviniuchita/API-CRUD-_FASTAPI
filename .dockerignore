@@ -91,8 +91,6 @@ secrets/
 
 # ── Documentação ─────────────────────────────────────────────
 docs/
-*.md
-README*
 CHANGELOG*
 CONTRIBUTING*
 LICENSE*
@@ -118,3 +116,10 @@ temp/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# ── Documentos ─────────────────────────────────────
+PRD.md
+DESAFIO_TECNICO.md
+AGENTE_1_DOCUMENTACAO.md
+AGENTE_2_DOCUMENTACAO.md
+testsprite_tests/

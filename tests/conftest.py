@@ -1,7 +1,11 @@
+# stdlib
+from typing import cast
+
 # third-party
 import pytest
 
 # local
+from app.repositories.client_repo import AsyncCollection
 from app.repositories.client_repo import ClientRepository
 from app.services.client_service import ClientService
 from mongomock_motor import AsyncMongoMockClient
@@ -24,5 +28,5 @@ async def client_service() -> ClientService:
         ]
     )
 
-    repo = ClientRepository(collection)
+    repo = ClientRepository(cast(AsyncCollection, collection))
     return ClientService(repo)

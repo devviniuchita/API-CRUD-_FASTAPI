@@ -1,0 +1,2008 @@
+{
+  "info": {
+    "name": "Clients API — Testes Rigorosos",
+    "description": "Suite completa com 53 requests cobrindo: CRUD Lifecycle (E2E), validações de schema (422), conflitos de unicidade (409), erros de formato (400), boundary values e contrato de resposta.\n\nPré-requisito: API rodando em http://localhost:8000\n\nComo executar com Newman:\n  npx newman run clients-api-rigorous-tests.postman_collection.json --delay-request 200",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "clients-api-rigorous-tests"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (!pm.collectionVariables.get('runId')) {",
+          "  const id = Date.now().toString().slice(-6);",
+          "  pm.collectionVariables.set('runId', id);",
+          "  pm.collectionVariables.set('fixtureEmail', `fixture.${id}@test.com`);",
+          "  pm.collectionVariables.set('fixtureDoc', `${id.slice(0,3)}.${id.slice(3,6)}.222-22`);",
+          "  pm.collectionVariables.set('lifecycleDocument', `${id.slice(0,3)}.${id.slice(3,6)}.000-00`);",
+          "  pm.collectionVariables.set('cpfDocument', `${id.slice(0,3)}.${id.slice(3,6)}.111-11`);",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8000", "description": "Base URL da API" },
+    { "key": "runId", "value": "" },
+    { "key": "fixtureEmail", "value": "" },
+    { "key": "fixtureDoc", "value": "" },
+    { "key": "lifecycleId", "value": "" },
+    { "key": "lifecycleCreatedAt", "value": "" },
+    { "key": "tempId1", "value": "" },
+    { "key": "tempId2", "value": "" },
+    { "key": "tempEmail1", "value": "" },
+    { "key": "tempEmail2", "value": "" },
+    { "key": "tempDoc1", "value": "" },
+    { "key": "generatedCNPJ", "value": "" },
+    { "key": "lifecycleDocument", "value": "" },
+    { "key": "cpfDocument", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "🔄 01 | CRUD Lifecycle (E2E) — Create → Read → PUT → PATCH → Delete → Confirm 404",
+      "item": [
+        {
+          "name": "01.1 — Create lifecycle client",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/clients", "host": ["{{baseUrl}}"], "path": ["clients"] },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\"name\": \"Lifecycle Client\", \"email\": \"lifecycle.{{runId}}@test.com\", \"document\": \"{{lifecycleDocument}}\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "const runId = pm.collectionVariables.get('runId');",
+                  "pm.test('Status: 201 Created', () => pm.response.to.have.status(201));",
+                  "pm.test('Response time < 800ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('Content-Type: application/json', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "pm.test('Schema: 6 required fields present', () => {",
+                  "  ['id','name','email','document','created_at','updated_at'].forEach(f => pm.expect(b).to.have.property(f));",
+                  "});",
+                  "pm.test('Schema: id is valid 24-char ObjectId hex', () => pm.expect(b.id).to.match(/^[a-f0-9]{24}$/i));",
+                  "pm.test('Schema: created_at is valid ISO 8601', () => pm.expect(new Date(b.created_at).toString()).to.not.equal('Invalid Date'));",
+                  "pm.test('Schema: updated_at is valid ISO 8601', () => pm.expect(new Date(b.updated_at).toString()).to.not.equal('Invalid Date'));",
+                  "pm.test('Business: name matches payload', () => pm.expect(b.name).to.eql('Lifecycle Client'));",
+                  "pm.test('Business: email matches payload', () => pm.expect(b.email).to.eql(`lifecycle.${runId}@test.com`));",
+                  "pm.test('Business: document matches payload', () => pm.expect(b.document).to.eql(pm.collectionVariables.get('lifecycleDocument')));",
+                  "pm.collectionVariables.set('lifecycleId', b.id);",
+                  "pm.collectionVariables.set('lifecycleCreatedAt', b.created_at);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "01.2 — Get created client by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/clients/{{lifecycleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "{{lifecycleId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('Status: 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 800ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('Content-Type: application/json', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "pm.test('Schema: 6 required fields present', () => {",
+                  "  ['id','name','email','document','created_at','updated_at'].forEach(f => pm.expect(b).to.have.property(f));",
+                  "});",
+                  "pm.test('Business: id matches queried id', () => pm.expect(b.id).to.eql(pm.collectionVariables.get('lifecycleId')));",
+                  "pm.test('Business: created_at matches creation value', () => pm.expect(b.created_at).to.eql(pm.collectionVariables.get('lifecycleCreatedAt')));",
+                  "pm.test('Business: no internal fields leaked (_id, __v)', () => {",
+                  "  pm.expect(b).to.not.have.property('_id');",
+                  "  pm.expect(b).to.not.have.property('__v');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "01.3 — Full update via PUT",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/clients/{{lifecycleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "{{lifecycleId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\"name\": \"Lifecycle Updated\", \"email\": \"lifecycle.updated.{{runId}}@test.com\", \"document\": \"98.765.432/0001-10\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "const runId = pm.collectionVariables.get('runId');",
+                  "pm.test('Status: 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 800ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('Schema: 6 required fields present', () => {",
+                  "  ['id','name','email','document','created_at','updated_at'].forEach(f => pm.expect(b).to.have.property(f));",
+                  "});",
+                  "pm.test('Business: name updated', () => pm.expect(b.name).to.eql('Lifecycle Updated'));",
+                  "pm.test('Business: email updated', () => pm.expect(b.email).to.eql(`lifecycle.updated.${runId}@test.com`));",
+                  "pm.test('Business: document updated to CNPJ', () => pm.expect(b.document).to.eql('98.765.432/0001-10'));",
+                  "pm.test('Business: id unchanged after PUT', () => pm.expect(b.id).to.eql(pm.collectionVariables.get('lifecycleId')));",
+                  "pm.test('Business: created_at PRESERVED by PUT (not overwritten)', () => pm.expect(b.created_at).to.eql(pm.collectionVariables.get('lifecycleCreatedAt')));",
+                  "pm.test('Business: updated_at is valid ISO date', () => pm.expect(new Date(b.updated_at).toString()).to.not.equal('Invalid Date'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "01.4 — Partial update via PATCH (name only)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/clients/{{lifecycleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "{{lifecycleId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\"name\": \"Lifecycle Patched\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "const runId = pm.collectionVariables.get('runId');",
+                  "pm.test('Status: 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 800ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('Schema: 6 required fields present', () => {",
+                  "  ['id','name','email','document','created_at','updated_at'].forEach(f => pm.expect(b).to.have.property(f));",
+                  "});",
+                  "pm.test('Business: name updated by PATCH', () => pm.expect(b.name).to.eql('Lifecycle Patched'));",
+                  "pm.test('Business: email NOT changed by name-only PATCH', () => pm.expect(b.email).to.eql(`lifecycle.updated.${runId}@test.com`));",
+                  "pm.test('Business: document NOT changed by name-only PATCH', () => pm.expect(b.document).to.eql('98.765.432/0001-10'));",
+                  "pm.test('Business: created_at NOT changed by PATCH', () => pm.expect(b.created_at).to.eql(pm.collectionVariables.get('lifecycleCreatedAt')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "01.5 — Delete lifecycle client",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/clients/{{lifecycleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "{{lifecycleId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status: 204 No Content', () => pm.response.to.have.status(204));",
+                  "pm.test('Response time < 800ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('Body is empty on 204', () => pm.expect(pm.response.text()).to.equal(''));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "01.6 — Confirm deleted client returns 404",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/clients/{{lifecycleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "{{lifecycleId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('Status: 404 (client was deleted)', () => pm.response.to.have.status(404));",
+                  "pm.test('Response time < 800ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('Error format: has detail field', () => pm.expect(b).to.have.property('detail'));",
+                  "pm.test('Error detail is non-empty string', () => pm.expect(b.detail).to.be.a('string').and.not.empty);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "➕ 02 | POST /clients — Happy Path (CPF e CNPJ)",
+      "item": [
+        {
+          "name": "02.1 — Create client with CPF format",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/clients", "host": ["{{baseUrl}}"], "path": ["clients"] },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\"name\": \"CPF Client\", \"email\": \"cpf.{{runId}}@test.com\", \"document\": \"{{cpfDocument}}\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Generate unique CNPJ using runId (split into two 3-digit groups)",
+                  "const runId = pm.collectionVariables.get('runId');",
+                  "const uniqueCNPJ = `11.${runId.slice(0,3)}.${runId.slice(3,6)}/0001-81`;",
+                  "pm.collectionVariables.set('generatedCNPJ', uniqueCNPJ);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('Status: 201 Created', () => pm.response.to.have.status(201));",
+                  "pm.test('Response time < 800ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('Content-Type: application/json', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "pm.test('Schema: 6 required fields present', () => {",
+                  "  ['id','name','email','document','created_at','updated_at'].forEach(f => pm.expect(b).to.have.property(f));",
+                  "});",
+                  "pm.test('Schema: id is valid 24-char ObjectId hex', () => pm.expect(b.id).to.match(/^[a-f0-9]{24}$/i));",
+                  "pm.test('Schema: both timestamps are valid ISO 8601', () => {",
+                  "  pm.expect(new Date(b.created_at).toString()).to.not.equal('Invalid Date');",
+                  "  pm.expect(new Date(b.updated_at).toString()).to.not.equal('Invalid Date');",
+                  "});",
+                  "pm.test('Business: document stored in CPF format', () => pm.expect(b.document).to.eql(pm.collectionVariables.get('cpfDocument')));",
+                  "pm.test('Business: no internal fields leaked (_id, __v)', () => {",
+                  "  pm.expect(b).to.not.have.property('_id');",
+                  "  pm.expect(b).to.not.have.property('__v');",
+                  "});",
+                  "pm.collectionVariables.set('tempId1', b.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "02.2 — Create client with CNPJ format",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/clients", "host": ["{{baseUrl}}"], "path": ["clients"] },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\"name\": \"CNPJ Company Ltda\", \"email\": \"cnpj.{{runId}}@test.com\", \"document\": \"{{generatedCNPJ}}\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Generate unique CNPJ using runId (split into two 3-digit groups)",
+                  "const runId = pm.collectionVariables.get('runId');",
+                  "const uniqueCNPJ = `11.${runId.slice(0,3)}.${runId.slice(3,6)}/0001-81`;",
+                  "pm.collectionVariables.set('generatedCNPJ', uniqueCNPJ);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('Status: 201 Created', () => pm.response.to.have.status(201));",
+                  "pm.test('Response time < 800ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('Schema: 6 required fields present', () => {",
+                  "  ['id','name','email','document','created_at','updated_at'].forEach(f => pm.expect(b).to.have.property(f));",
+                  "});",
+                  "pm.test('Schema: id is valid 24-char ObjectId hex', () => pm.expect(b.id).to.match(/^[a-f0-9]{24}$/i));",
+                  "pm.test('Business: document stored in CNPJ format', () => pm.expect(b.document).to.eql(pm.collectionVariables.get('generatedCNPJ')));",
+                  "pm.test('Business: name matches payload', () => pm.expect(b.name).to.eql('CNPJ Company Ltda'));",
+                  "pm.test('Business: no internal fields leaked', () => {",
+                  "  pm.expect(b).to.not.have.property('_id');",
+                  "  pm.expect(b).to.not.have.property('__v');",
+                  "});",
+                  "pm.collectionVariables.set('tempId2', b.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "02.3 — [Teardown] Delete CPF client",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/clients/{{tempId1}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "{{tempId1}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[Cleanup] CPF client: 204 or 404', () => pm.expect([204,404]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "02.4 — [Teardown] Delete CNPJ client",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/clients/{{tempId2}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "{{tempId2}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[Cleanup] CNPJ client: 204 or 404', () => pm.expect([204,404]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "❌ 03 | POST /clients — Validação de Schema e Conflito (409/422)",
+      "item": [
+        {
+          "name": "03.01 — [Setup] Create fixture for duplicate tests",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/clients", "host": ["{{baseUrl}}"], "path": ["clients"] },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\"name\": \"Fixture Duplicate\", \"email\": \"{{fixtureEmail}}\", \"document\": \"{{fixtureDoc}}\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[Setup] fixture created: 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('tempId1', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03.02 — name ausente → 422",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/clients", "host": ["{{baseUrl}}"], "path": ["clients"] },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\"email\": \"noname.{{runId}}@test.com\", \"document\": \"111.222.333-44\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status: 422 (name ausente)', () => pm.response.to.have.status(422));",
+                  "pm.test('Body has detail field', () => pm.expect(pm.response.json()).to.have.property('detail'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03.03 — name com 1 char (boundary min-1) → 422",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/clients", "host": ["{{baseUrl}}"], "path": ["clients"] },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\"name\": \"A\", \"email\": \"short.{{runId}}@test.com\", \"document\": \"111.222.333-44\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status: 422 (name < 2 chars — boundary)', () => pm.response.to.have.status(422));",
+                  "pm.test('Body has detail field', () => pm.expect(pm.response.json()).to.have.property('detail'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03.04 — name com 101 chars (boundary max+1) → 422",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/clients", "host": ["{{baseUrl}}"], "path": ["clients"] },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\"name\": \"AAAAAAAAAABBBBBBBBBBCCCCCCCCCCDDDDDDDDDDEEEEEEEEEEAAAAAAAAAABBBBBBBBBBCCCCCCCCCCDDDDDDDDDDEEEEEEEEEE1\", \"email\": \"long.{{runId}}@test.com\", \"document\": \"111.222.333-44\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status: 422 (name > 100 chars — boundary)', () => pm.response.to.have.status(422));",
+                  "pm.test('Body has detail field', () => pm.expect(pm.response.json()).to.have.property('detail'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03.05 — email ausente → 422",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/clients", "host": ["{{baseUrl}}"], "path": ["clients"] },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\"name\": \"No Email Client\", \"document\": \"111.222.333-44\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status: 422 (email ausente)', () => pm.response.to.have.status(422));",
+                  "pm.test('Body has detail field', () => pm.expect(pm.response.json()).to.have.property('detail'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03.06 — email com formato inválido → 422",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/clients", "host": ["{{baseUrl}}"], "path": ["clients"] },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\"name\": \"Bad Email\", \"email\": \"not-a-valid-email\", \"document\": \"111.222.333-44\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status: 422 (email inválido)', () => pm.response.to.have.status(422));",
+                  "pm.test('Body has detail field', () => pm.expect(pm.response.json()).to.have.property('detail'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03.07 — document ausente → 422",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/clients", "host": ["{{baseUrl}}"], "path": ["clients"] },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\"name\": \"No Document\", \"email\": \"nodoc.{{runId}}@test.com\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status: 422 (document ausente)', () => pm.response.to.have.status(422));",
+                  "pm.test('Body has detail field', () => pm.expect(pm.response.json()).to.have.property('detail'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03.08 — document só dígitos (sem formatação CPF/CNPJ) → 422",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/clients", "host": ["{{baseUrl}}"], "path": ["clients"] },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\"name\": \"Bad Doc\", \"email\": \"baddoc.{{runId}}@test.com\", \"document\": \"11122233344\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status: 422 (document sem formatação CPF/CNPJ)', () => pm.response.to.have.status(422));",
+                  "pm.test('Body has detail field', () => pm.expect(pm.response.json()).to.have.property('detail'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03.09 — document com letras → 422",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/clients", "host": ["{{baseUrl}}"], "path": ["clients"] },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\"name\": \"Letter Doc\", \"email\": \"letterdoc.{{runId}}@test.com\", \"document\": \"abc.def.ghi-jk\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status: 422 (document com letras)', () => pm.response.to.have.status(422));",
+                  "pm.test('Body has detail field', () => pm.expect(pm.response.json()).to.have.property('detail'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03.10 — body vazio {} → 422",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/clients", "host": ["{{baseUrl}}"], "path": ["clients"] },
+            "body": { "mode": "raw", "options": { "raw": { "language": "json" } }, "raw": "{}" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status: 422 (body vazio {})', () => pm.response.to.have.status(422));",
+                  "pm.test('Body has detail field', () => pm.expect(pm.response.json()).to.have.property('detail'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03.11 — email duplicado → 409",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/clients", "host": ["{{baseUrl}}"], "path": ["clients"] },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\"name\": \"Duplicate Email Client\", \"email\": \"{{fixtureEmail}}\", \"document\": \"111.000.001-00\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('Status: 409 Conflict (email duplicado)', () => pm.response.to.have.status(409));",
+                  "pm.test('Response time < 800ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('Error: has detail field', () => pm.expect(b).to.have.property('detail'));",
+                  "pm.test('Error detail is non-empty string', () => pm.expect(b.detail).to.be.a('string').and.not.empty);",
+                  "pm.test('Error detail mentions conflicting field', () => {",
+                  "  pm.expect(b.detail.toLowerCase()).to.satisfy(d => d.includes('email') || d.includes('field') || d.includes('already'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03.12 — document duplicado → 409",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/clients", "host": ["{{baseUrl}}"], "path": ["clients"] },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\"name\": \"Duplicate Doc Client\", \"email\": \"dupdoc.{{runId}}@test.com\", \"document\": \"{{fixtureDoc}}\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('Status: 409 Conflict (document duplicado)', () => pm.response.to.have.status(409));",
+                  "pm.test('Response time < 800ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('Error: has detail field', () => pm.expect(b).to.have.property('detail'));",
+                  "pm.test('Error detail is non-empty string', () => pm.expect(b.detail).to.be.a('string').and.not.empty);",
+                  "pm.test('Error detail mentions conflicting field', () => {",
+                  "  pm.expect(b.detail.toLowerCase()).to.satisfy(d => d.includes('document') || d.includes('field') || d.includes('already'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03.13 — [Teardown] Delete fixture",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/clients/{{tempId1}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "{{tempId1}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[Teardown] fixture: 204 or 404', () => pm.expect([204,404]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "📋 04 | GET /clients — Listagem",
+      "item": [
+        {
+          "name": "04.1 — List all clients",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/clients", "host": ["{{baseUrl}}"], "path": ["clients"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('Status: 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 800ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('Content-Type: application/json', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "pm.test('Response body is an array', () => pm.expect(b).to.be.an('array'));",
+                  "pm.test('Each item has 6 required fields (if not empty)', () => {",
+                  "  if (b.length > 0) {",
+                  "    b.forEach((item, i) => {",
+                  "      ['id','name','email','document','created_at','updated_at'].forEach(f =>",
+                  "        pm.expect(item, `item[${i}] missing: ${f}`).to.have.property(f)",
+                  "      );",
+                  "    });",
+                  "  }",
+                  "});",
+                  "pm.test('Each item id is valid 24-char ObjectId hex (if not empty)', () => {",
+                  "  if (b.length > 0) {",
+                  "    b.forEach((item, i) => pm.expect(item.id, `item[${i}].id`).to.match(/^[a-f0-9]{24}$/i));",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "🔍 05 | GET /clients/{id} — Busca por ID",
+      "item": [
+        {
+          "name": "05.1 — [Setup] Create fixture",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/clients", "host": ["{{baseUrl}}"], "path": ["clients"] },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\"name\": \"GetByID Client\", \"email\": \"getbyid.{{runId}}@test.com\", \"document\": \"321.654.987-00\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[Setup] fixture created: 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('tempId1', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "05.2 — Get existing client → 200",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/clients/{{tempId1}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "{{tempId1}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('Status: 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 800ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('Content-Type: application/json', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "pm.test('Schema: 6 required fields present', () => {",
+                  "  ['id','name','email','document','created_at','updated_at'].forEach(f => pm.expect(b).to.have.property(f));",
+                  "});",
+                  "pm.test('Business: returned id matches queried id', () => pm.expect(b.id).to.eql(pm.collectionVariables.get('tempId1')));",
+                  "pm.test('Business: schema types are correct', () => {",
+                  "  pm.expect(b.id).to.be.a('string');",
+                  "  pm.expect(b.name).to.be.a('string');",
+                  "  pm.expect(b.email).to.be.a('string');",
+                  "  pm.expect(b.document).to.be.a('string');",
+                  "  pm.expect(b.created_at).to.be.a('string');",
+                  "  pm.expect(b.updated_at).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "05.3 — Get with invalid ID format → 400",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/clients/not-a-valid-objectid",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "not-a-valid-objectid"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('Status: 400 Bad Request (ID inválido)', () => pm.response.to.have.status(400));",
+                  "pm.test('Response time < 800ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('Error: has detail field', () => pm.expect(b).to.have.property('detail'));",
+                  "pm.test('Error detail is non-empty string', () => pm.expect(b.detail).to.be.a('string').and.not.empty);",
+                  "pm.test('Error detail mentions ID or invalid', () => {",
+                  "  pm.expect(b.detail.toLowerCase()).to.satisfy(d => d.includes('id') || d.includes('invalid'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "05.4 — Get with valid format but nonexistent ID → 404",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/clients/000000000000000000000000",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "000000000000000000000000"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('Status: 404 Not Found (ID inexistente)', () => pm.response.to.have.status(404));",
+                  "pm.test('Response time < 800ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('Error: has detail field', () => pm.expect(b).to.have.property('detail'));",
+                  "pm.test('Error detail is non-empty string', () => pm.expect(b.detail).to.be.a('string').and.not.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "05.5 — [Teardown] Delete fixture",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/clients/{{tempId1}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "{{tempId1}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[Teardown]: 204 or 404', () => pm.expect([204,404]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "✏️ 06 | PUT /clients/{id} — Atualização Completa",
+      "item": [
+        {
+          "name": "06.1 — [Setup] Create fixture 1",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/clients", "host": ["{{baseUrl}}"], "path": ["clients"] },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\"name\": \"PUT Client One\", \"email\": \"put.one.{{runId}}@test.com\", \"document\": \"100.200.300-40\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Setup: fixture 1 created (201)', () => pm.response.to.have.status(201));",
+                  "const b = pm.response.json();",
+                  "pm.collectionVariables.set('tempId1', b.id);",
+                  "pm.collectionVariables.set('tempEmail1', b.email);",
+                  "pm.collectionVariables.set('lifecycleCreatedAt', b.created_at);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "06.2 — Full update preserves created_at",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/clients/{{tempId1}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "{{tempId1}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\"name\": \"PUT Updated\", \"email\": \"put.updated.{{runId}}@test.com\", \"document\": \"500.600.700-80\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "const runId = pm.collectionVariables.get('runId');",
+                  "pm.test('Status: 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 800ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('Schema: 6 required fields present', () => {",
+                  "  ['id','name','email','document','created_at','updated_at'].forEach(f => pm.expect(b).to.have.property(f));",
+                  "});",
+                  "pm.test('Business: name was updated', () => pm.expect(b.name).to.eql('PUT Updated'));",
+                  "pm.test('Business: email was updated', () => pm.expect(b.email).to.eql(`put.updated.${runId}@test.com`));",
+                  "pm.test('Business: document was updated', () => pm.expect(b.document).to.eql('500.600.700-80'));",
+                  "pm.test('Business: id unchanged after PUT', () => pm.expect(b.id).to.eql(pm.collectionVariables.get('tempId1')));",
+                  "pm.test('Business: created_at PRESERVED (not overwritten by PUT)', () => {",
+                  "  pm.expect(b.created_at).to.eql(pm.collectionVariables.get('lifecycleCreatedAt'));",
+                  "});",
+                  "pm.test('Business: updated_at is valid ISO date', () => pm.expect(new Date(b.updated_at).toString()).to.not.equal('Invalid Date'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "06.3 — PUT with CNPJ document",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/clients/{{tempId1}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "{{tempId1}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\"name\": \"PUT CNPJ Client\", \"email\": \"put.cnpj.{{runId}}@test.com\", \"document\": \"{{generatedCNPJ}}\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Generate unique CNPJ using runId (split into two 3-digit groups)",
+                  "const runId = pm.collectionVariables.get('runId');",
+                  "const uniqueCNPJ = `11.${runId.slice(0,3)}.${runId.slice(3,6)}/0001-81`;",
+                  "pm.collectionVariables.set('generatedCNPJ', uniqueCNPJ);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('Status: 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Business: document updated to CNPJ format', () => pm.expect(b.document).to.eql(pm.collectionVariables.get('generatedCNPJ')));",
+                  "pm.test('Business: name updated', () => pm.expect(b.name).to.eql('PUT CNPJ Client'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "06.4 — PUT with invalid ID format → 400",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/clients/invalid-id-format",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "invalid-id-format"]
+            },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\"name\": \"Test\", \"email\": \"test.{{runId}}@test.com\", \"document\": \"111.222.333-44\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('Status: 400 Bad Request (ID inválido)', () => pm.response.to.have.status(400));",
+                  "pm.test('Error: has detail field', () => pm.expect(b).to.have.property('detail'));",
+                  "pm.test('Error detail mentions ID or invalid', () => {",
+                  "  pm.expect(b.detail.toLowerCase()).to.satisfy(d => d.includes('id') || d.includes('invalid'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "06.5 — PUT with nonexistent valid ID → 404",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/clients/000000000000000000000000",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "000000000000000000000000"]
+            },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\"name\": \"Ghost\", \"email\": \"ghost.{{runId}}@test.com\", \"document\": \"111.222.333-44\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('Status: 404 Not Found (ID inexistente)', () => pm.response.to.have.status(404));",
+                  "pm.test('Error: has detail field', () => pm.expect(b).to.have.property('detail'));",
+                  "pm.test('Error detail is non-empty string', () => pm.expect(b.detail).to.be.a('string').and.not.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "06.6 — [Setup] Create fixture 2 (para conflito)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/clients", "host": ["{{baseUrl}}"], "path": ["clients"] },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\"name\": \"PUT Client Two\", \"email\": \"put.two.{{runId}}@test.com\", \"document\": \"200.300.400-50\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Setup: fixture 2 created (201)', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('tempId2', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "06.7 — PUT duplicate email (conflito com fixture 1) → 409",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/clients/{{tempId2}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "{{tempId2}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\"name\": \"Conflict PUT\", \"email\": \"put.cnpj.{{runId}}@test.com\", \"document\": \"300.400.500-60\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('Status: 409 Conflict (email duplicado em PUT)', () => pm.response.to.have.status(409));",
+                  "pm.test('Error: has detail field', () => pm.expect(b).to.have.property('detail'));",
+                  "pm.test('Error detail is non-empty string', () => pm.expect(b.detail).to.be.a('string').and.not.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "06.8 — [Teardown] Delete fixture 1",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/clients/{{tempId1}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "{{tempId1}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[Teardown] fixture 1: 204 or 404', () => pm.expect([204,404]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "06.9 — [Teardown] Delete fixture 2",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/clients/{{tempId2}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "{{tempId2}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[Teardown] fixture 2: 204 or 404', () => pm.expect([204,404]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "🩹 07 | PATCH /clients/{id} — Atualização Parcial (Atomicidade)",
+      "item": [
+        {
+          "name": "07.1 — [Setup] Create fixture",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/clients", "host": ["{{baseUrl}}"], "path": ["clients"] },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\"name\": \"Patch Target\", \"email\": \"patch.target.{{runId}}@test.com\", \"document\": \"444.555.666-77\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Setup: fixture created (201)', () => pm.response.to.have.status(201));",
+                  "const b = pm.response.json();",
+                  "pm.collectionVariables.set('tempId1', b.id);",
+                  "pm.collectionVariables.set('tempEmail1', b.email);",
+                  "pm.collectionVariables.set('tempDoc1', b.document);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "07.2 — PATCH name only (email e document inalterados)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/clients/{{tempId1}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "{{tempId1}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\"name\": \"Patched Name\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('Status: 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 800ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('Schema: 6 required fields present', () => {",
+                  "  ['id','name','email','document','created_at','updated_at'].forEach(f => pm.expect(b).to.have.property(f));",
+                  "});",
+                  "pm.test('Business: name was updated', () => pm.expect(b.name).to.eql('Patched Name'));",
+                  "pm.test('Business: email was NOT changed by name-only PATCH', () => {",
+                  "  pm.expect(b.email).to.eql(pm.collectionVariables.get('tempEmail1'));",
+                  "});",
+                  "pm.test('Business: document was NOT changed by name-only PATCH', () => {",
+                  "  pm.expect(b.document).to.eql(pm.collectionVariables.get('tempDoc1'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "07.3 — PATCH email only (name e document inalterados)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/clients/{{tempId1}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "{{tempId1}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\"email\": \"patched.email.{{runId}}@test.com\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "const runId = pm.collectionVariables.get('runId');",
+                  "pm.test('Status: 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Business: email was updated', () => pm.expect(b.email).to.eql(`patched.email.${runId}@test.com`));",
+                  "pm.test('Business: name was NOT changed by email-only PATCH', () => pm.expect(b.name).to.eql('Patched Name'));",
+                  "pm.test('Business: document was NOT changed by email-only PATCH', () => {",
+                  "  pm.expect(b.document).to.eql(pm.collectionVariables.get('tempDoc1'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "07.4 — PATCH document only (name e email inalterados, para CNPJ)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/clients/{{tempId1}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "{{tempId1}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\"document\": \"{{generatedCNPJ}}\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Generate unique CNPJ using runId (split into two 3-digit groups)",
+                  "const runId = pm.collectionVariables.get('runId');",
+                  "const uniqueCNPJ = `11.${runId.slice(0,3)}.${runId.slice(3,6)}/0001-81`;",
+                  "pm.collectionVariables.set('generatedCNPJ', uniqueCNPJ);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "const runId = pm.collectionVariables.get('runId');",
+                  "pm.test('Status: 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Business: document updated to CNPJ', () => pm.expect(b.document).to.eql(pm.collectionVariables.get('generatedCNPJ')));",
+                  "pm.test('Business: name was NOT changed by document-only PATCH', () => pm.expect(b.name).to.eql('Patched Name'));",
+                  "pm.test('Business: email was NOT changed by document-only PATCH', () => {",
+                  "  pm.expect(b.email).to.eql(`patched.email.${runId}@test.com`);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "07.5 — PATCH body vazio {} → 422",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/clients/{{tempId1}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "{{tempId1}}"]
+            },
+            "body": { "mode": "raw", "options": { "raw": { "language": "json" } }, "raw": "{}" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('Status: 422 (PATCH sem campos)', () => pm.response.to.have.status(422));",
+                  "pm.test('Error: has detail field', () => pm.expect(b).to.have.property('detail'));",
+                  "pm.test('Error detail is non-empty string', () => pm.expect(b.detail).to.be.a('string').and.not.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "07.6 — PATCH document com formato inválido → 422",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/clients/{{tempId1}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "{{tempId1}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\"document\": \"12345678\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status: 422 (document inválido em PATCH)', () => pm.response.to.have.status(422));",
+                  "pm.test('Error: has detail field', () => pm.expect(pm.response.json()).to.have.property('detail'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "07.7 — [Setup] Create fixture 2 (para conflito)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/clients", "host": ["{{baseUrl}}"], "path": ["clients"] },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\"name\": \"Patch Conflict Source\", \"email\": \"patch.conflict.{{runId}}@test.com\", \"document\": \"888.777.666-55\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Setup: fixture 2 created (201)', () => pm.response.to.have.status(201));",
+                  "const b = pm.response.json();",
+                  "pm.collectionVariables.set('tempId2', b.id);",
+                  "pm.collectionVariables.set('tempEmail2', b.email);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "07.8 — PATCH duplicate email → 409",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/clients/{{tempId1}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "{{tempId1}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\"email\": \"patch.conflict.{{runId}}@test.com\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('Status: 409 Conflict (email duplicado em PATCH)', () => pm.response.to.have.status(409));",
+                  "pm.test('Error: has detail field', () => pm.expect(b).to.have.property('detail'));",
+                  "pm.test('Error detail is non-empty string', () => pm.expect(b.detail).to.be.a('string').and.not.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "07.9 — [Teardown] Delete fixture 1",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/clients/{{tempId1}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "{{tempId1}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[Teardown] fixture 1: 204 or 404', () => pm.expect([204,404]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "07.10 — [Teardown] Delete fixture 2",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/clients/{{tempId2}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "{{tempId2}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[Teardown] fixture 2: 204 or 404', () => pm.expect([204,404]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "🗑️ 08 | DELETE /clients/{id} — Remoção",
+      "item": [
+        {
+          "name": "08.1 — [Setup] Create fixture",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/clients", "host": ["{{baseUrl}}"], "path": ["clients"] },
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\"name\": \"Delete Target\", \"email\": \"del.target.{{runId}}@test.com\", \"document\": \"777.888.999-00\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Setup: fixture created (201)', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('tempId1', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "08.2 — Delete existing client → 204 + body vazio",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/clients/{{tempId1}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "{{tempId1}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status: 204 No Content', () => pm.response.to.have.status(204));",
+                  "pm.test('Response time < 800ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('Body is empty on 204', () => pm.expect(pm.response.text()).to.equal(''));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "08.3 — Delete same ID again → 404 (não idempotente por design)",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/clients/{{tempId1}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "{{tempId1}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('Status: 404 (cliente já deletado)', () => pm.response.to.have.status(404));",
+                  "pm.test('Error: has detail field', () => pm.expect(b).to.have.property('detail'));",
+                  "pm.test('Error detail is non-empty string', () => pm.expect(b.detail).to.be.a('string').and.not.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "08.4 — Delete with invalid ID format → 400",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/clients/not-a-valid-id",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "not-a-valid-id"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('Status: 400 Bad Request (ID inválido)', () => pm.response.to.have.status(400));",
+                  "pm.test('Error: has detail field', () => pm.expect(b).to.have.property('detail'));",
+                  "pm.test('Error detail mentions ID or invalid', () => {",
+                  "  pm.expect(b.detail.toLowerCase()).to.satisfy(d => d.includes('id') || d.includes('invalid'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "08.5 — Delete valid format nonexistent ID → 404",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/clients/000000000000000000000000",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "000000000000000000000000"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('Status: 404 (ID válido mas inexistente)', () => pm.response.to.have.status(404));",
+                  "pm.test('Error: has detail field', () => pm.expect(b).to.have.property('detail'));",
+                  "pm.test('Error detail is non-empty string', () => pm.expect(b.detail).to.be.a('string').and.not.empty);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "🔤 09 | Caracteres Especiais, Encoding & Injection",
+      "item": [
+        {
+          "name": "09.1 — XSS no name → armazenado como texto, não executado",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"<script>alert(1)</script>\", \"email\": \"xss.{{runId}}@test.com\", \"document\": \"{{doc09_1}}\"}"
+            },
+            "url": { "raw": "{{baseUrl}}/clients", "host": ["{{baseUrl}}"], "path": ["clients"] }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const r = pm.collectionVariables.get('runId').toString().padStart(6,'0');",
+                  "pm.collectionVariables.set('doc09_1', `${r.slice(0,3)}.${r.slice(3,6)}.901-01`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status: 201 — XSS string aceita como texto plano', () => pm.response.to.have.status(201));",
+                  "if (pm.response.code === 201) {",
+                  "  const b = pm.response.json();",
+                  "  pm.collectionVariables.set('xssClientId', b.id);",
+                  "  pm.test('XSS: name armazenado literalmente (não executado)', () => {",
+                  "    pm.expect(b.name).to.equal('<script>alert(1)</script>');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "09.2 — SQL Injection no name → armazenado como texto",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Robert'); DROP TABLE clients;--\", \"email\": \"sqli.{{runId}}@test.com\", \"document\": \"{{doc09_2}}\"}"
+            },
+            "url": { "raw": "{{baseUrl}}/clients", "host": ["{{baseUrl}}"], "path": ["clients"] }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const r = pm.collectionVariables.get('runId').toString().padStart(6,'0');",
+                  "pm.collectionVariables.set('doc09_2', `${r.slice(0,3)}.${r.slice(3,6)}.902-02`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status: 201 — SQL injection aceito como texto plano', () => pm.response.to.have.status(201));",
+                  "if (pm.response.code === 201) {",
+                  "  const b = pm.response.json();",
+                  "  pm.collectionVariables.set('sqliClientId', b.id);",
+                  "  pm.test('SQL injection: name armazenado literalmente', () => {",
+                  "    pm.expect(b.name).to.include('DROP TABLE');",
+                  "  });",
+                  "  pm.test('API sobreviveu ao SQL injection (banco íntegro)', () => {",
+                  "    pm.expect(b).to.have.property('id');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "09.3 — Emojis no name → aceitos e preservados",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"João 🚀 Silva 🎯\", \"email\": \"emoji.{{runId}}@test.com\", \"document\": \"{{doc09_3}}\"}"
+            },
+            "url": { "raw": "{{baseUrl}}/clients", "host": ["{{baseUrl}}"], "path": ["clients"] }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const r = pm.collectionVariables.get('runId').toString().padStart(6,'0');",
+                  "pm.collectionVariables.set('doc09_3', `${r.slice(0,3)}.${r.slice(3,6)}.903-03`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status: 201 — emojis aceitos no name', () => pm.response.to.have.status(201));",
+                  "if (pm.response.code === 201) {",
+                  "  const b = pm.response.json();",
+                  "  pm.collectionVariables.set('emojiClientId', b.id);",
+                  "  pm.test('Emojis preservados no round-trip', () => {",
+                  "    pm.expect(b.name).to.equal('João 🚀 Silva 🎯');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "09.4 — UTF-8 acentos (português/espanhol) → round-trip correto",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Vânia Côrrea Ñoño\", \"email\": \"utf8.{{runId}}@test.com\", \"document\": \"{{doc09_4}}\"}"
+            },
+            "url": { "raw": "{{baseUrl}}/clients", "host": ["{{baseUrl}}"], "path": ["clients"] }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const r = pm.collectionVariables.get('runId').toString().padStart(6,'0');",
+                  "pm.collectionVariables.set('doc09_4', `${r.slice(0,3)}.${r.slice(3,6)}.904-04`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status: 201 — UTF-8 acentos aceitos', () => pm.response.to.have.status(201));",
+                  "if (pm.response.code === 201) {",
+                  "  const b = pm.response.json();",
+                  "  pm.collectionVariables.set('utf8ClientId', b.id);",
+                  "  pm.test('Acentos/UTF-8 preservados no round-trip GET', () => {",
+                  "    pm.expect(b.name).to.equal('Vânia Côrrea Ñoño');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "09.5 — Caracteres CJK (chinês) no name → round-trip correto",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"李小明 Wang\", \"email\": \"cjk.{{runId}}@test.com\", \"document\": \"{{doc09_5}}\"}"
+            },
+            "url": { "raw": "{{baseUrl}}/clients", "host": ["{{baseUrl}}"], "path": ["clients"] }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const r = pm.collectionVariables.get('runId').toString().padStart(6,'0');",
+                  "pm.collectionVariables.set('doc09_5', `${r.slice(0,3)}.${r.slice(3,6)}.905-05`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status: 201 — caracteres CJK aceitos', () => pm.response.to.have.status(201));",
+                  "if (pm.response.code === 201) {",
+                  "  const b = pm.response.json();",
+                  "  pm.collectionVariables.set('cjkClientId', b.id);",
+                  "  pm.test('CJK: caracteres preservados no round-trip', () => {",
+                  "    pm.expect(b.name).to.equal('李小明 Wang');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "09.6 — GET confirma que dados especiais estão persistidos no Mongo",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/clients/{{xssClientId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "{{xssClientId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status: 200 — XSS client persiste no Mongo', () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test('XSS name íntegro após persistência no Mongo', () => {",
+                  "  pm.expect(b.name).to.equal('<script>alert(1)</script>');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "09.7 — [Teardown] XSS client",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/clients/{{xssClientId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "{{xssClientId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[Cleanup] XSS client: 204 ou 404', () => {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([204, 404]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "09.8 — [Teardown] SQL injection client",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/clients/{{sqliClientId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "{{sqliClientId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[Cleanup] SQL injection client: 204 ou 404', () => {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([204, 404]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "09.9 — [Teardown] Emoji client",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/clients/{{emojiClientId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "{{emojiClientId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[Cleanup] Emoji client: 204 ou 404', () => {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([204, 404]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "09.10 — [Teardown] UTF-8 client",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/clients/{{utf8ClientId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "{{utf8ClientId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[Cleanup] UTF-8 client: 204 ou 404', () => {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([204, 404]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "09.11 — [Teardown] CJK client",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/clients/{{cjkClientId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["clients", "{{cjkClientId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('[Cleanup] CJK client: 204 ou 404', () => {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([204, 404]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

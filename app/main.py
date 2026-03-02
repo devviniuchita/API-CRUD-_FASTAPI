@@ -16,6 +16,8 @@ from fastapi import HTTPException
 from fastapi import Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from pymongo.errors import PyMongoError
+from pymongo.errors import ServerSelectionTimeoutError
 
 
 # ── Logging configuration ─────────────────────────────────────
@@ -67,6 +69,26 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
     return JSONResponse(
         status_code=exc.status_code,
         content={"detail": exc.detail},
+    )
+
+
+@app.exception_handler(ServerSelectionTimeoutError)
+async def mongo_timeout_handler(
+    request: Request, exc: ServerSelectionTimeoutError
+) -> JSONResponse:
+    logger.error("MongoDB unreachable: %s", exc)
+    return JSONResponse(
+        status_code=503,
+        content={"detail": "Service temporarily unavailable. Database is unreachable."},
+    )
+
+
+@app.exception_handler(PyMongoError)
+async def mongo_error_handler(request: Request, exc: PyMongoError) -> JSONResponse:
+    logger.error("MongoDB error: %s", exc)
+    return JSONResponse(
+        status_code=503,
+        content={"detail": "Service temporarily unavailable. Database error."},
     )
 
 

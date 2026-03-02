@@ -1,11 +1,30 @@
 # stdlib
+from typing import Any
 from typing import Optional
+from typing import Protocol
 
 # third-party
 from bson import ObjectId
-from motor.motor_asyncio import AsyncIOMotorCollection
 from pymongo.errors import DuplicateKeyError as MongoDuplicateKeyError
 from pymongo.errors import PyMongoError
+
+
+# ── Collection protocol ───────────────────────────────────────
+class AsyncCollection(Protocol):
+    """Structural interface for an async MongoDB collection.
+
+    Both ``AsyncIOMotorCollection`` (Motor, production) and
+    ``AsyncMongoMockCollection`` (mongomock-motor, tests) satisfy this
+    interface, enabling clean dependency injection and testability
+    without coupling production code to test-only dependencies.
+    """
+
+    def insert_one(self, document: dict, **kwargs: Any) -> Any: ...
+    def find_one(self, filter: Any = None, **kwargs: Any) -> Any: ...
+    def find(self, filter: Any = None, **kwargs: Any) -> Any: ...
+    def replace_one(self, filter: Any, replacement: dict, **kwargs: Any) -> Any: ...
+    def update_one(self, filter: Any, update: Any, **kwargs: Any) -> Any: ...
+    def delete_one(self, filter: Any, **kwargs: Any) -> Any: ...
 
 
 # ── Custom exception ──────────────────────────────────────────
@@ -19,7 +38,7 @@ class DuplicateFieldError(Exception):
 
 # ── Repository ────────────────────────────────────────────────
 class ClientRepository:
-    def __init__(self, collection: AsyncIOMotorCollection) -> None:
+    def __init__(self, collection: AsyncCollection) -> None:
         self.collection = collection
 
     # ── helpers ───────────────────────────────────────────────
@@ -63,14 +82,22 @@ class ClientRepository:
 
     async def update(self, id: str, data: dict) -> Optional[dict]:
         """Full replacement (PUT). Returns updated doc or None if not found."""
-        result = await self.collection.replace_one({"_id": ObjectId(id)}, data)
+        try:
+            result = await self.collection.replace_one({"_id": ObjectId(id)}, data)
+        except MongoDuplicateKeyError as exc:
+            raise DuplicateFieldError(self._extract_duplicate_field(exc)) from exc
         if result.matched_count == 0:
             return None
         return await self.find_by_id(id)
 
     async def patch(self, id: str, data: dict) -> Optional[dict]:
         """Partial update (PATCH). Returns updated doc or None if not found."""
-        result = await self.collection.update_one({"_id": ObjectId(id)}, {"$set": data})
+        try:
+            result = await self.collection.update_one(
+                {"_id": ObjectId(id)}, {"$set": data}
+            )
+        except MongoDuplicateKeyError as exc:
+            raise DuplicateFieldError(self._extract_duplicate_field(exc)) from exc
         if result.matched_count == 0:
             return None
         return await self.find_by_id(id)

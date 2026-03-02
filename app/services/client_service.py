@@ -25,14 +25,14 @@ class ClientService:
         if not ObjectId.is_valid(id):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"ID inválido: '{id}'. Deve ser um ObjectId hexadecimal de 24 caracteres.",
+                detail=f"Invalid ID: '{id}'. Must be a 24-character hexadecimal ObjectId.",
             )
 
     @staticmethod
     def _handle_duplicate(exc: DuplicateFieldError) -> NoReturn:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=f"Campo '{exc.field}' já cadastrado.",
+            detail=f"Field '{exc.field}' already registered.",
         )
 
     # ── CRUD ──────────────────────────────────────────────────
@@ -55,7 +55,7 @@ class ClientService:
         if client is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Cliente '{id}' não encontrado.",
+                detail=f"Client '{id}' not found.",
             )
         return client
 
@@ -67,7 +67,7 @@ class ClientService:
         if existing is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Cliente '{id}' não encontrado.",
+                detail=f"Client '{id}' not found.",
             )
         data = payload.model_dump()
         data["created_at"] = existing["created_at"]
@@ -79,7 +79,7 @@ class ClientService:
         if result is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Cliente '{id}' não encontrado.",
+                detail=f"Client '{id}' not found.",
             )
         return result
 
@@ -90,7 +90,7 @@ class ClientService:
         if not update_data:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="Nenhum campo fornecido para atualização.",
+                detail="No fields provided for update.",
             )
         update_data["updated_at"] = datetime.now(timezone.utc)
         try:
@@ -100,7 +100,7 @@ class ClientService:
         if result is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Cliente '{id}' não encontrado.",
+                detail=f"Client '{id}' not found.",
             )
         return result
 
@@ -110,5 +110,5 @@ class ClientService:
         if not deleted:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Cliente '{id}' não encontrado.",
+                detail=f"Client '{id}' not found.",
             )

@@ -23,7 +23,12 @@ async def connect_to_mongo() -> None:
     global _client, _db
 
     logger.info("Connecting to MongoDB at %s …", settings.MONGO_URI)
-    _client = AsyncIOMotorClient(settings.MONGO_URI)
+    _client = AsyncIOMotorClient(
+        settings.MONGO_URI,
+        serverSelectionTimeoutMS=3000,  # fail fast (3s) when Mongo is unreachable
+        connectTimeoutMS=3000,
+        socketTimeoutMS=5000,
+    )
     _db = _client[settings.DB_NAME]
 
     await _create_indexes()
