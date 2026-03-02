@@ -63,7 +63,7 @@ API REST assíncrona completa construída sobre **FastAPI + MongoDB** com estrit
 - **Imposição de unique index** — Indexes de `email` e `document` criados programaticamente na inicialização; duplicatas retornam `409 Conflict` com o campo conflitante identificado
 - **Tratamento semântico de ObjectId** — Todos os valores `_id` convertidos para string `id` em cada resposta; IDs malformados retornam `400 Bad Request`
 - **Async do início ao fim** — Driver async Motor 3.4; o event loop do FastAPI nunca bloqueia em I/O
-- **Request logging estruturado** — Cada requisição logada com método, path, status code e tempo de resposta (ms)
+- **Logs estruturados em JSON** — Saída JSON single-line por linha de log; cada requisição carrega `request_id` único (correlação), `client_ip`, `http_method`, `http_path`, `http_status` e `duration_ms` como campos separados. Mutações (`POST`, `PUT`, `PATCH`, `DELETE`) também geram eventos de negócio na camada Service com o `client_id` afetado. Header `X-Request-ID` exposto em todas as respostas
 - **Inicialização zero-config** — `docker compose up --build` conecta API + MongoDB em uma rede Docker interna
 
 ---
@@ -77,7 +77,7 @@ API REST assíncrona completa construída sobre **FastAPI + MongoDB** com estrit
 | Banco de Dados | MongoDB 4.4              | Persistência de documentos, unique indexes                     |
 | Driver         | Motor 3.4                | Cliente MongoDB assíncrono (I/O não-bloqueante)                |
 | Runtime        | Python 3.12              | Tipagem forte, async/await nativo                              |
-| Config         | pydantic-settings        | Carregamento de variáveis de ambiente (`MONGO_URI`, `DB_NAME`) |
+| Config         | pydantic-settings        | Carregamento de variáveis de ambiente (`MONGO_URI`, `DB_NAME`, `LOG_LEVEL`) |
 | Infra          | Docker + Compose         | Ambiente reproduzível e sem dependências externas              |
 | Testes         | pytest + mongomock-motor | Testes unitários com mock MongoDB em memória                   |
 
@@ -182,6 +182,7 @@ Copy-Item .env.example .env # Windows (PowerShell)
 | ----------- | ------------------------- | --------------------------------------------------------- |
 | `MONGO_URI` | `mongodb://mongodb:27017` | String de conexão do Motor (usa o nome do serviço Docker) |
 | `DB_NAME`   | `clients_db`              | Nome do banco de dados MongoDB                            |
+| `LOG_LEVEL` | `INFO`                    | Nível de log da aplicação (`DEBUG`, `INFO`, `WARNING`, `ERROR`) |
 
 > [!NOTE]
 > Os valores padrão do `.env.example` funcionam **sem nenhuma alteração** quando o projeto é executado via Docker Compose. O hostname `mongodb` é o nome do serviço definido no `docker-compose.yml` e é resolvido automaticamente pela rede interna do Docker.
@@ -391,7 +392,7 @@ pytest -v --tb=short
 │   │       └── 🔹 clients.py         # HTTP handlers, docs Swagger, injeção via Depends()
 │   ├── 📁 core
 │   │   ├── 🔹 config.py              # Pydantic BaseSettings (variáveis de ambiente)
-│   │   └── 🔹 logging.py             # Middleware de request logging
+│   │   └── 🔹 logging.py             # JSONFormatter + RequestLoggingMiddleware (request_id, client_ip, duration_ms)
 │   ├── 📁 db
 │   │   └── 🔹 mongo.py               # Motor client, criação de unique indexes na inicialização
 │   ├── 📁 repositories

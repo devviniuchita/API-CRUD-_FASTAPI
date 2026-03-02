@@ -1,4 +1,5 @@
 # stdlib
+import logging
 from datetime import datetime
 from datetime import timezone
 from typing import NoReturn
@@ -13,6 +14,8 @@ from app.schemas.client import ClientUpdate
 from bson import ObjectId
 from fastapi import HTTPException
 from fastapi import status
+
+logger = logging.getLogger(__name__)
 
 
 class ClientService:
@@ -42,9 +45,11 @@ class ClientService:
         data["created_at"] = now
         data["updated_at"] = now
         try:
-            return await self.repo.create(data)
+            result = await self.repo.create(data)
         except DuplicateFieldError as exc:
             self._handle_duplicate(exc)
+        logger.info("Client created", extra={"client_id": result["id"]})
+        return result
 
     async def list_clients(self) -> list[dict]:
         return await self.repo.find_all()
@@ -81,6 +86,7 @@ class ClientService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Client '{id}' not found.",
             )
+        logger.info("Client updated", extra={"client_id": id})
         return result
 
     async def patch_client(self, id: str, payload: ClientUpdate) -> dict:
@@ -102,6 +108,7 @@ class ClientService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Client '{id}' not found.",
             )
+        logger.info("Client patched", extra={"client_id": id})
         return result
 
     async def delete_client(self, id: str) -> None:
@@ -112,3 +119,4 @@ class ClientService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Client '{id}' not found.",
             )
+        logger.info("Client deleted", extra={"client_id": id})

@@ -15,7 +15,8 @@ Cliente HTTP
 ┌─────────────────────────────────────────────────┐
 │  MIDDLEWARE LAYER  (app/core/logging.py)        │
 │  CORSMiddleware + RequestLoggingMiddleware      │
-│  → loga método, path, status code, tempo (ms)   │
+│  → JSON estruturado: request_id, client_ip,    │
+│    http_method, http_path, status, duration_ms  │
 └──────────────────────┬──────────────────────────┘
                        │
                        ▼
@@ -62,11 +63,11 @@ Ponto de entrada da aplicação. Instancia o `FastAPI` com metadados `OpenAPI`, 
 
 ### `app/core/config.py` — Configuração
 
-`Pydantic BaseSettings` lendo variáveis de ambiente (`MONGO_URI`, `DB_NAME`). Zero credenciais hardcoded. Valores padrão via `.env` ou variáveis do container Docker.
+`Pydantic BaseSettings` lendo variáveis de ambiente (`MONGO_URI`, `DB_NAME`, `LOG_LEVEL`). Zero credenciais hardcoded. Valores padrão via `.env` ou variáveis do container Docker.
 
 ### `app/core/logging.py` — Middleware de Logging
 
-`BaseHTTPMiddleware` que intercepta cada requisição, registra método + path na entrada e adiciona status code + tempo de resposta em ms na saída. Não interfere no fluxo de dados.
+Dois componentes: `JSONFormatter` (formata todo log da aplicação como JSON single-line, via stdlib puro) e `RequestLoggingMiddleware` (`BaseHTTPMiddleware` que gera um `request_id` UUID por requisição via `ContextVar`, expõe-o no header `X-Request-ID`, e loga `client_ip`, `http_method`, `http_path`, `http_status` e `duration_ms` como campos estruturados). Log duplicado do uvicorn suprimido via `dictConfig`.
 
 ### `app/db/mongo.py` — Conexão com MongoDB
 
@@ -84,7 +85,7 @@ Interface com o MongoDB. Define um `Protocol` (`AsyncCollection`) que tanto `Asy
 
 ### `app/services/client_service.py` — Lógica de Negócio
 
-Única camada que conhece `HTTPException`. Valida `ObjectId` antes de qualquer operação (`bson.ObjectId.is_valid`), injeta `datetime.now(timezone.utc)` nos campos de auditoria e traduz exceções de domínio (`DuplicateFieldError`) em respostas HTTP semânticas (`409 Conflict`). O PUT preserva `created_at` do documento original.
+Única camada que conhece `HTTPException`. Valida `ObjectId` antes de qualquer operação (`bson.ObjectId.is_valid`), injeta `datetime.now(timezone.utc)` nos campos de auditoria e traduz exceções de domínio (`DuplicateFieldError`) em respostas HTTP semânticas (`409 Conflict`). O PUT preserva `created_at` do documento original. Emite eventos de log `INFO` para todas as operações de mutação (`create`, `update`, `patch`, `delete`) com o `client_id` afetado.
 
 ### `app/api/routes/clients.py` — Endpoints HTTP
 

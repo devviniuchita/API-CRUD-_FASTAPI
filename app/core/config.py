@@ -9,6 +9,7 @@ from pydantic_settings import SettingsConfigDict
 class Settings(BaseSettings):
     MONGO_URI: str
     DB_NAME: str
+    LOG_LEVEL: str = "INFO"
 
     model_config = SettingsConfigDict(
         env_file=".env",

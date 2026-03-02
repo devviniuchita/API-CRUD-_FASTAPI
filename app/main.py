@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
 # local
+from app.core.config import settings
 from app.core.logging import RequestLoggingMiddleware
 from app.db.mongo import close_mongo_connection
 from app.db.mongo import connect_to_mongo
@@ -27,10 +28,27 @@ from pymongo.errors import ServerSelectionTimeoutError
 
 
 # ── Logging configuration ─────────────────────────────────────
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s | %(levelname)-8s | %(name)s — %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
+logging.config.dictConfig(
+    {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "json": {"()": "app.core.logging.JSONFormatter"},
+        },
+        "handlers": {
+            "console": {
+                "class": "logging.StreamHandler",
+                "formatter": "json",
+                "stream": "ext://sys.stderr",
+            },
+        },
+        "loggers": {
+            # Uvicorn already logs each request; our middleware duplicates that.
+            # Suppress uvicorn's access log to keep output clean.
+            "uvicorn.access": {"level": "WARNING", "propagate": False},
+        },
+        "root": {"level": settings.LOG_LEVEL, "handlers": ["console"]},
+    }
 )
 
 logger = logging.getLogger(__name__)
@@ -83,7 +101,7 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
 async def mongo_timeout_handler(
     request: Request, exc: ServerSelectionTimeoutError
 ) -> JSONResponse:
-    logger.error("MongoDB unreachable: %s", exc)
+    logger.error("MongoDB unreachable: %s", exc, exc_info=True)
     return JSONResponse(
         status_code=503,
         content={"detail": "Service temporarily unavailable. Database is unreachable."},
@@ -92,7 +110,7 @@ async def mongo_timeout_handler(
 
 @app.exception_handler(PyMongoError)
 async def mongo_error_handler(request: Request, exc: PyMongoError) -> JSONResponse:
-    logger.error("MongoDB error: %s", exc)
+    logger.error("MongoDB error: %s", exc, exc_info=True)
     return JSONResponse(
         status_code=503,
         content={"detail": "Service temporarily unavailable. Database error."},
