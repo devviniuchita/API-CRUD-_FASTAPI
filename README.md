@@ -435,12 +435,13 @@ pytest -v --tb=short
 │
 ├── 🐳 .dockerignore
 ├── ⚙️ .gitignore
+├── ⚖️ LICENSE                        # Licença MIT
 ├── 🐳 Dockerfile                     # Build multi-stage, usuário não-root (appuser, UID 1001)
 ├── 📝 ARCHITECTURE.md
 ├── 📝 QUICK_START_BACK.md
 ├── 📝 QUICK_START_FRONT.md
 ├── 📝 README.md
-├── 🐳 docker-compose.yml             # API + MongoDB com rede Docker interna
+├── 🐳 docker-compose.yml             # API + MongoDB + Frontend com rede Docker interna
 ├── ⚙️ pyproject.toml                 # Configuração do pytest e metadados do projeto
 └── 📄 requirements.txt               # Dependências com versões fixadas
 ```
@@ -530,6 +531,8 @@ Certifique-se também de que uma instância do MongoDB está rodando localmente 
 ![Frontend — Clients UI](images/frontend.png)
 
 _Interface de gerenciamento de clientes com glassmorphism, dark mode e CRUD completo._
+
+_Para mais detalhes acesse: [README do Frontend](clients-ui/README.md)_
 
 </div>
 

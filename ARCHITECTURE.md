@@ -159,6 +159,7 @@ Interface com o MongoDB. Define um `Protocol` (`AsyncCollection`) que tanto `Asy
 │
 ├── 🐳 .dockerignore
 ├── ⚙️ .gitignore
+├── ⚖️ LICENSE
 ├── 🐳 Dockerfile
 ├── 📝 ARCHITECTURE.md
 ├── 📝 QUICK_START_BACK.md
