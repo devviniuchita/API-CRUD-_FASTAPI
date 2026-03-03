@@ -260,9 +260,14 @@ drive_folder.html
 downloads/
 *.crdownload
 
+### Frontend (Angular) ###
+clients-ui/node_modules/
+clients-ui/dist/
+clients-ui/.angular/
+clients-ui/.vscode/
+
+### Progress Tracking ###
+.frontend-progress.md
+
 # Documentos
-PRD.md
-DESAFIO_TECNICO.md
-AGENTE_1_DOCUMENTACAO.md
-AGENTE_2_DOCUMENTACAO.md
-testsprite_tests/
+

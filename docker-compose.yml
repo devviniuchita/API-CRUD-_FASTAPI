@@ -27,6 +27,19 @@ services:
     networks:
       - backend
 
+  frontend:
+    build:
+      context: ./clients-ui
+      dockerfile: Dockerfile
+    container_name: frontend
+    restart: unless-stopped
+    ports:
+      - "4200:80"
+    depends_on:
+      - api
+    networks:
+      - backend
+
 networks:
   backend:
     driver: bridge

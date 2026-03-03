@@ -23,6 +23,7 @@ _API CRUD em camadas, pronta para produção. Do zero ao Swagger UI rodando em m
 
 ## Índice
 
+- [Quick Start Guides](#quick-start-guides)
 - [Visão Geral](#visão-geral)
 - [Funcionalidades](#funcionalidades)
 - [Tech Stack](#tech-stack)
@@ -43,6 +44,15 @@ _API CRUD em camadas, pronta para produção. Do zero ao Swagger UI rodando em m
 - [Uso de IA](#uso-de-ia)
 - [Solução de Problemas](#solução-de-problemas)
 - [Licença](#licença)
+
+---
+
+## Quick Start Guides
+
+| Guia                                             | Descrição                                           |
+| ------------------------------------------------ | --------------------------------------------------- |
+| **[Quick Start Backend](QUICK_START_BACK.md)**   | API FastAPI + MongoDB — do zero ao Swagger em 2 min |
+| **[Quick Start Frontend](QUICK_START_FRONT.md)** | Angular + Tailwind — interface moderna em 1 comando |
 
 ---
 
@@ -70,16 +80,16 @@ API REST assíncrona completa construída sobre **FastAPI + MongoDB** com estrit
 
 ## Tech Stack
 
-| Camada         | Tecnologia               | Função                                                         |
-| -------------- | ------------------------ | -------------------------------------------------------------- |
-| Framework      | FastAPI 0.111            | Camada HTTP, geração de OpenAPI, dependency injection          |
-| Validação      | Pydantic V2              | Schemas de input/output, field validators                      |
-| Banco de Dados | MongoDB 4.4              | Persistência de documentos, unique indexes                     |
-| Driver         | Motor 3.4                | Cliente MongoDB assíncrono (I/O não-bloqueante)                |
-| Runtime        | Python 3.12              | Tipagem forte, async/await nativo                              |
+| Camada         | Tecnologia               | Função                                                                      |
+| -------------- | ------------------------ | --------------------------------------------------------------------------- |
+| Framework      | FastAPI 0.111            | Camada HTTP, geração de OpenAPI, dependency injection                       |
+| Validação      | Pydantic V2              | Schemas de input/output, field validators                                   |
+| Banco de Dados | MongoDB 4.4              | Persistência de documentos, unique indexes                                  |
+| Driver         | Motor 3.4                | Cliente MongoDB assíncrono (I/O não-bloqueante)                             |
+| Runtime        | Python 3.12              | Tipagem forte, async/await nativo                                           |
 | Config         | pydantic-settings        | Carregamento de variáveis de ambiente (`MONGO_URI`, `DB_NAME`, `LOG_LEVEL`) |
-| Infra          | Docker + Compose         | Ambiente reproduzível e sem dependências externas              |
-| Testes         | pytest + mongomock-motor | Testes unitários com mock MongoDB em memória                   |
+| Infra          | Docker + Compose         | Ambiente reproduzível e sem dependências externas                           |
+| Testes         | pytest + mongomock-motor | Testes unitários com mock MongoDB em memória                                |
 
 ---
 
@@ -178,10 +188,10 @@ Copy-Item .env.example .env # Windows (PowerShell)
 
 ### Variáveis de Ambiente
 
-| Variável    | Padrão                    | Descrição                                                 |
-| ----------- | ------------------------- | --------------------------------------------------------- |
-| `MONGO_URI` | `mongodb://mongodb:27017` | String de conexão do Motor (usa o nome do serviço Docker) |
-| `DB_NAME`   | `clients_db`              | Nome do banco de dados MongoDB                            |
+| Variável    | Padrão                    | Descrição                                                       |
+| ----------- | ------------------------- | --------------------------------------------------------------- |
+| `MONGO_URI` | `mongodb://mongodb:27017` | String de conexão do Motor (usa o nome do serviço Docker)       |
+| `DB_NAME`   | `clients_db`              | Nome do banco de dados MongoDB                                  |
 | `LOG_LEVEL` | `INFO`                    | Nível de log da aplicação (`DEBUG`, `INFO`, `WARNING`, `ERROR`) |
 
 > [!NOTE]
@@ -404,21 +414,31 @@ pytest -v --tb=short
 │   ├── 📁 static
 │   │   └── ⚡ redoc.standalone.js    # Bundle ReDoc servido localmente (sem CDN externo)
 │   └── 🔹 main.py                    # Bootstrap do FastAPI, lifespan, middlewares, exception handlers
+│
+├── 📁 clients-ui # Frontend do Projeto # Frontend do Projeto
+│
 ├── 📁 images
 │   ├── 🖼️ fastapi_clients_architecture.svg
+│   ├── 🖼️ frontend.png
 │   ├── 🖼️ spec_driven_dev.svg
 │   └── 🖼️ swagger_ui.png
+│
 ├── 📁 postman
 │   └── ⚙️ clients-api-tests.postman_collection.json
+│
 ├── 📁 tests
 │   ├── 📝 TUTORIAL_TESTS.md          # Guia completo de testes
 │   ├── 🔹 conftest.py                # Fixture mongomock-motor
 │   ├── ⚡ k6-load-test.js            # Testes de carga e concorrência
 │   ├── 🔷 test-mongo-offline.ps1     # Teste de resiliência (falha do MongoDB)
 │   └── 🔹 test_client_service.py     # Testes unitários — camada Service
+│
 ├── 🐳 .dockerignore
 ├── ⚙️ .gitignore
 ├── 🐳 Dockerfile                     # Build multi-stage, usuário não-root (appuser, UID 1001)
+├── 📝 ARCHITECTURE.md
+├── 📝 QUICK_START_BACK.md
+├── 📝 QUICK_START_FRONT.md
 ├── 📝 README.md
 ├── 🐳 docker-compose.yml             # API + MongoDB com rede Docker interna
 ├── ⚙️ pyproject.toml                 # Configuração do pytest e metadados do projeto
@@ -500,6 +520,50 @@ MONGO_URI=mongodb://localhost:27017
 Certifique-se também de que uma instância do MongoDB está rodando localmente na porta `27017`.
 
 </details>
+
+---
+
+## Frontend (Angular + Tailwind)
+
+<div align="center">
+
+![Frontend — Clients UI](images/frontend.png)
+
+_Interface de gerenciamento de clientes com glassmorphism, dark mode e CRUD completo._
+
+</div>
+
+### Rodar tudo (Docker — recomendado)
+
+```bash
+docker compose up --build
+```
+
+| Serviço  | URL                        |
+| -------- | -------------------------- |
+| Frontend | http://localhost:4200      |
+| API      | http://localhost:8000      |
+| Swagger  | http://localhost:8000/docs |
+
+### Rodar frontend em desenvolvimento
+
+Requer Node.js 20+.
+
+```bash
+cd clients-ui && npm install && npm start
+```
+
+### Funcionalidades
+
+- Listagem com busca local
+- Cadastro com validação + input mask CPF/CNPJ
+- Edição com PATCH semântico
+- Exclusão com modal de confirmação
+- Dark/Light mode persistido
+- Toast notifications com auto-dismiss
+- Skeleton loading + empty states
+- Responsivo mobile-first
+- Acessibilidade WCAG 2.1 AA
 
 ---
 

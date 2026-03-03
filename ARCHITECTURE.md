@@ -15,7 +15,7 @@ Cliente HTTP
 ┌─────────────────────────────────────────────────┐
 │  MIDDLEWARE LAYER  (app/core/logging.py)        │
 │  CORSMiddleware + RequestLoggingMiddleware      │
-│  → JSON estruturado: request_id, client_ip,    │
+│  → JSON estruturado: request_id, client_ip,     │
 │    http_method, http_path, status, duration_ms  │
 └──────────────────────┬──────────────────────────┘
                        │
@@ -138,21 +138,31 @@ Interface com o MongoDB. Define um `Protocol` (`AsyncCollection`) que tanto `Asy
 │   ├── 📁 static
 │   │   └── ⚡ redoc.standalone.js
 │   └── 🔹 main.py
+│
+├── 📁 clients-ui # Frontend do Projeto
+│
 ├── 📁 images
 │   ├── 🖼️ fastapi_clients_architecture.svg
+│   ├── 🖼️ frontend.png
 │   ├── 🖼️ spec_driven_dev.svg
 │   └── 🖼️ swagger_ui.png
+│
 ├── 📁 postman
 │   └── ⚙️ clients-api-tests.postman_collection.json
+│
 ├── 📁 tests
 │   ├── 📝 TUTORIAL_TESTS.md
 │   ├── 🔹 conftest.py
 │   ├── ⚡ k6-load-test.js
 │   ├── 🔷 test-mongo-offline.ps1
 │   └── 🔹 test_client_service.py
+│
 ├── 🐳 .dockerignore
 ├── ⚙️ .gitignore
 ├── 🐳 Dockerfile
+├── 📝 ARCHITECTURE.md
+├── 📝 QUICK_START_BACK.md
+├── 📝 QUICK_START_FRONT.md
 ├── 📝 README.md
 ├── 🐳 docker-compose.yml
 ├── ⚙️ pyproject.toml

@@ -1,0 +1,123 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-bg-primary:      #F0F4FF;
+  --color-bg-secondary:    #E8EDF8;
+  --color-bg-elevated:     #FFFFFF;
+  --color-text-primary:    #0F1729;
+  --color-text-secondary:  #4A5578;
+  --color-text-muted:      #8892B0;
+  --color-brand-primary:   #3D6FFF;
+  --color-brand-secondary: #6C3FE8;
+  --color-brand-accent:    #00D4FF;
+  --color-success:         #10B981;
+  --color-warning:         #F59E0B;
+  --color-error:           #EF4444;
+  --color-border:          rgba(61, 111, 255, 0.15);
+  --color-border-focus:    rgba(61, 111, 255, 0.6);
+  --gradient-aurora:
+    radial-gradient(ellipse at 20% 50%, rgba(61,111,255,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(108,63,232,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse at 60% 80%, rgba(0,212,255,0.05) 0%, transparent 60%);
+}
+
+[data-theme="dark"] {
+  --color-bg-primary:      #070B18;
+  --color-bg-secondary:    #0D1428;
+  --color-bg-elevated:     #131D35;
+  --color-text-primary:    #E2E8F8;
+  --color-text-secondary:  #8892B0;
+  --color-text-muted:      #4A5578;
+  --color-brand-primary:   #4D7CFF;
+  --color-brand-secondary: #7C52F0;
+  --color-brand-accent:    #00D4FF;
+  --color-border:          rgba(77, 124, 255, 0.12);
+  --color-border-focus:    rgba(77, 124, 255, 0.5);
+  --gradient-aurora:
+    radial-gradient(ellipse at 20% 50%, rgba(77,124,255,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(124,82,240,0.10) 0%, transparent 60%),
+    radial-gradient(ellipse at 60% 80%, rgba(0,212,255,0.07) 0%, transparent 60%);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-family: 'Outfit', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--color-bg-primary);
+  background-image: var(--gradient-aurora);
+  color: var(--color-text-primary);
+  min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+// Glassmorphism
+.glass-card {
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+}
+[data-theme="dark"] .glass-card {
+  background: rgba(13,20,40,0.6);
+}
+
+// Glow Effects
+.glow-primary {
+  box-shadow: 0 0 20px rgba(61,111,255,0.3), 0 0 40px rgba(61,111,255,0.1);
+}
+
+// Neumorphism Inputs
+.neuro-input {
+  background: var(--color-bg-secondary);
+  box-shadow: inset 3px 3px 6px rgba(0,0,0,0.08), inset -3px -3px 6px rgba(255,255,255,0.7);
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+
+  &:focus {
+    border-color: var(--color-brand-primary);
+    box-shadow: inset 2px 2px 4px rgba(0,0,0,0.05),
+                0 0 0 3px rgba(61,111,255,0.15),
+                0 0 12px rgba(61,111,255,0.2);
+    outline: none;
+  }
+}
+[data-theme="dark"] .neuro-input {
+  box-shadow: inset 3px 3px 8px rgba(0,0,0,0.4), inset -2px -2px 6px rgba(77,124,255,0.05);
+}
+
+// Focus visible
+:focus-visible {
+  outline: 2px solid var(--color-brand-primary);
+  outline-offset: 2px;
+}
+
+// Skip link
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 0;
+  z-index: 9999;
+  padding: 0.5rem 1rem;
+  background: var(--color-brand-primary);
+  color: #fff;
+  font-weight: 600;
+  border-radius: 0 0 8px 0;
+  transition: top 0.2s;
+
+  &:focus {
+    top: 0;
+  }
+}
