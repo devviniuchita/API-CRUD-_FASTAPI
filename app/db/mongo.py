@@ -28,6 +28,7 @@ async def connect_to_mongo() -> None:
         serverSelectionTimeoutMS=3000,  # fail fast (3s) when Mongo is unreachable
         connectTimeoutMS=3000,
         socketTimeoutMS=5000,
+        tz_aware=True,
     )
     _db = _client[settings.DB_NAME]
 
