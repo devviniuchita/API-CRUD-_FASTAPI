@@ -1,8 +1,9 @@
 # stdlib
 import logging
+
 from datetime import datetime
-from datetime import timezone
 from typing import NoReturn
+from zoneinfo import ZoneInfo
 
 # local
 from app.repositories.client_repo import ClientRepository
@@ -14,6 +15,7 @@ from app.schemas.client import ClientUpdate
 from bson import ObjectId
 from fastapi import HTTPException
 from fastapi import status
+
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +42,7 @@ class ClientService:
 
     # ── CRUD ──────────────────────────────────────────────────
     async def create_client(self, payload: ClientCreate) -> dict:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(ZoneInfo("America/Sao_Paulo"))
         data = payload.model_dump()
         data["created_at"] = now
         data["updated_at"] = now
@@ -76,7 +78,7 @@ class ClientService:
             )
         data = payload.model_dump()
         data["created_at"] = existing["created_at"]
-        data["updated_at"] = datetime.now(timezone.utc)
+        data["updated_at"] = datetime.now(ZoneInfo("America/Sao_Paulo"))
         try:
             result = await self.repo.update(id, data)
         except DuplicateFieldError as exc:
@@ -98,7 +100,7 @@ class ClientService:
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="No fields provided for update.",
             )
-        update_data["updated_at"] = datetime.now(timezone.utc)
+        update_data["updated_at"] = datetime.now(ZoneInfo("America/Sao_Paulo"))
         try:
             result = await self.repo.patch(id, update_data)
         except DuplicateFieldError as exc:

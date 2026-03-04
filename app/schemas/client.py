@@ -4,12 +4,14 @@ import re
 from datetime import datetime
 from typing import Annotated
 from typing import Optional
+from zoneinfo import ZoneInfo
 
 # third-party
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import EmailStr
 from pydantic import Field
+from pydantic import field_serializer
 from pydantic import field_validator
 
 
@@ -87,6 +89,10 @@ class ClientUpdate(BaseModel):
         return v
 
 
+# ── Timezone ──────────────────────────────────────────────────
+_BR_TZ = ZoneInfo("America/Sao_Paulo")
+
+
 # ── ClientResponse ────────────────────────────────────────────
 class ClientResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -97,3 +103,9 @@ class ClientResponse(BaseModel):
     document: str = Field(..., json_schema_extra={"example": _EX_CPF})
     created_at: datetime
     updated_at: datetime
+
+    @field_serializer("created_at", "updated_at")
+    def serialize_to_br(self, value: datetime, _info: object) -> str:
+        if value.tzinfo is not None:
+            value = value.astimezone(_BR_TZ)
+        return value.strftime("%Y-%m-%dT%H:%M:%S")
