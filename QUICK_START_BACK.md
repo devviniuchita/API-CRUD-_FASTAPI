@@ -20,8 +20,8 @@
 
 ```bash
 # 1. Clone o repositório
-git clone https://github.com/devviniuchita/API-CRUD-_FASTAPI.git
-cd API-CRUD-_FASTAPI
+git clone https://github.com/devviniuchita/clients_api.git
+cd clients_api
 
 # 2. Crie o arquivo de variáveis de ambiente
 cp .env.example .env          # Linux / macOS
@@ -34,11 +34,11 @@ docker compose up --build
 
 ### Pronto! Acesse:
 
-| Serviço       | URL                                              |
-|---------------|--------------------------------------------------|
-| Swagger UI    | [localhost:8000/docs](http://localhost:8000/docs) |
-| ReDoc         | [localhost:8000/redoc](http://localhost:8000/redoc) |
-| Health Check  | [localhost:8000/health](http://localhost:8000/health) |
+| Serviço      | URL                                                   |
+| ------------ | ----------------------------------------------------- |
+| Swagger UI   | [localhost:8000/docs](http://localhost:8000/docs)     |
+| ReDoc        | [localhost:8000/redoc](http://localhost:8000/redoc)   |
+| Health Check | [localhost:8000/health](http://localhost:8000/health) |
 
 > Aguarde a mensagem `Application startup complete.` nos logs antes de acessar.
 
@@ -67,7 +67,7 @@ docker compose down -v
 ### Pré-requisitos
 
 | Ferramenta | Versão | Verificar com          |
-|------------|--------|------------------------|
+| ---------- | ------ | ---------------------- |
 | Python     | 3.12+  | `python --version`     |
 | pip        | 24+    | `pip --version`        |
 | MongoDB    | 4.4+   | Rodando na porta 27017 |
@@ -78,8 +78,8 @@ docker compose down -v
 
 ```bash
 # 1. Clone o repositório
-git clone https://github.com/devviniuchita/API-CRUD-_FASTAPI.git
-cd API-CRUD-_FASTAPI
+git clone https://github.com/devviniuchita/clients_api.git
+cd clients_api
 
 # 2. Crie e ative o ambiente virtual
 python -m venv .venv
@@ -124,15 +124,15 @@ pytest -v --tb=short
 
 ## 📡 Endpoints da API
 
-| Método   | Rota              | Descrição                  | Status   |
-|----------|-------------------|----------------------------|----------|
-| `GET`    | `/health`         | Health check + MongoDB     | `200`    |
-| `POST`   | `/clients`        | Criar cliente              | `201`    |
-| `GET`    | `/clients`        | Listar todos               | `200`    |
-| `GET`    | `/clients/{id}`   | Buscar por ID              | `200`    |
-| `PUT`    | `/clients/{id}`   | Substituir (todos campos)  | `200`    |
-| `PATCH`  | `/clients/{id}`   | Atualizar (campos parciais)| `200`    |
-| `DELETE` | `/clients/{id}`   | Remover                    | `204`    |
+| Método   | Rota            | Descrição                   | Status |
+| -------- | --------------- | --------------------------- | ------ |
+| `GET`    | `/health`       | Health check + MongoDB      | `200`  |
+| `POST`   | `/clients`      | Criar cliente               | `201`  |
+| `GET`    | `/clients`      | Listar todos                | `200`  |
+| `GET`    | `/clients/{id}` | Buscar por ID               | `200`  |
+| `PUT`    | `/clients/{id}` | Substituir (todos campos)   | `200`  |
+| `PATCH`  | `/clients/{id}` | Atualizar (campos parciais) | `200`  |
+| `DELETE` | `/clients/{id}` | Remover                     | `204`  |
 
 ### Exemplo de cliente (JSON)
 
@@ -152,7 +152,7 @@ pytest -v --tb=short
 ## 🔧 Variáveis de Ambiente
 
 | Variável    | Padrão                    | Descrição                         |
-|-------------|---------------------------|-----------------------------------|
+| ----------- | ------------------------- | --------------------------------- |
 | `MONGO_URI` | `mongodb://mongodb:27017` | Conexão MongoDB (Docker)          |
 | `DB_NAME`   | `clients_db`              | Nome do banco                     |
 | `LOG_LEVEL` | `INFO`                    | Nível de log (DEBUG/INFO/WARNING) |
@@ -168,10 +168,12 @@ pytest -v --tb=short
 <summary><strong>Porta 8000 já está em uso</strong></summary>
 
 Altere a porta no `docker-compose.yml`:
+
 ```yaml
 ports:
-  - "8001:8000"
+  - '8001:8000'
 ```
+
 Acesse em: http://localhost:8001/docs
 
 </details>
@@ -187,6 +189,7 @@ O Docker Desktop não está rodando. Abra-o e aguarde o ícone ficar verde.
 <summary><strong>Erro de conexão ao rodar localmente</strong></summary>
 
 Verifique se o MongoDB está rodando na porta 27017 e se o `.env` tem:
+
 ```
 MONGO_URI=mongodb://localhost:27017
 ```

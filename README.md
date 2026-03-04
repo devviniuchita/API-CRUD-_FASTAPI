@@ -131,8 +131,8 @@ O ciclo de vida da conexão MongoDB é gerenciado pelo context manager `lifespan
 
 ```bash
 # 1. Clone o repositório
-git clone https://github.com/devviniuchita/API-CRUD-_FASTAPI.git
-cd API-CRUD-_FASTAPI
+git clone https://github.com/devviniuchita/clients_api.git
+cd clients_api
 
 # 2. Crie o arquivo de variáveis de ambiente
 cp .env.example .env        # Linux/macOS
@@ -177,8 +177,8 @@ Verifique a saúde da API e a conectividade com o banco em **http://localhost:80
 
 ```bash
 # Clone o repositório
-git clone https://github.com/devviniuchita/API-CRUD-_FASTAPI.git
-cd API-CRUD-_FASTAPI
+git clone https://github.com/devviniuchita/clients_api.git
+cd clients_api
 
 # Crie o arquivo .env a partir do template
 cp .env.example .env        # Linux/macOS

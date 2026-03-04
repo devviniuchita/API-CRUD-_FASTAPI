@@ -20,8 +20,8 @@
 
 ```bash
 # 1. Clone o repositório (se ainda não clonou)
-git clone https://github.com/devviniuchita/API-CRUD-_FASTAPI.git
-cd API-CRUD-_FASTAPI
+git clone https://github.com/devviniuchita/clients_api.git
+cd clients_api
 
 # 2. Crie o .env (se ainda não criou)
 cp .env.example .env          # Linux / macOS
@@ -33,22 +33,22 @@ docker compose up --build
 
 ### Pronto! Acesse:
 
-| Serviço   | URL                                                    |
-|-----------|--------------------------------------------------------|
-| Frontend  | [localhost:4200](http://localhost:4200)                 |
-| Swagger   | [localhost:8000/docs](http://localhost:8000/docs)       |
-| ReDoc     | [localhost:8000/redoc](http://localhost:8000/redoc)     |
-| API Health| [localhost:8000/health](http://localhost:8000/health)   |
+| Serviço    | URL                                                   |
+| ---------- | ----------------------------------------------------- |
+| Frontend   | [localhost:4200](http://localhost:4200)               |
+| Swagger    | [localhost:8000/docs](http://localhost:8000/docs)     |
+| ReDoc      | [localhost:8000/redoc](http://localhost:8000/redoc)   |
+| API Health | [localhost:8000/health](http://localhost:8000/health) |
 
 > O Docker builda o Angular, gera os assets estáticos e serve via **Nginx Alpine** (~25 MB).
 
 ### Containers iniciados
 
-| Container  | Imagem           | Porta  | Função                      |
-|------------|------------------|--------|-----------------------------|
-| `frontend` | Nginx Alpine     | `4200` | Serve o build Angular       |
-| `api`      | Python 3.12 Slim | `8000` | API FastAPI                 |
-| `mongodb`  | Mongo 4.4        | `27017`| Banco de dados              |
+| Container  | Imagem           | Porta   | Função                |
+| ---------- | ---------------- | ------- | --------------------- |
+| `frontend` | Nginx Alpine     | `4200`  | Serve o build Angular |
+| `api`      | Python 3.12 Slim | `8000`  | API FastAPI           |
+| `mongodb`  | Mongo 4.4        | `27017` | Banco de dados        |
 
 ---
 
@@ -58,10 +58,10 @@ docker compose up --build
 
 ### Pré-requisitos
 
-| Ferramenta | Versão | Verificar com      |
-|------------|--------|--------------------|
-| Node.js    | 20+    | `node --version`   |
-| npm        | 10+    | `npm --version`    |
+| Ferramenta | Versão | Verificar com    |
+| ---------- | ------ | ---------------- |
+| Node.js    | 20+    | `node --version` |
+| npm        | 10+    | `npm --version`  |
 
 > **Importante:** A API FastAPI deve estar rodando na porta `8000`. Use Docker para a API ou siga o [Quick Start Backend](QUICK_START_BACK.md).
 
@@ -149,10 +149,10 @@ clients-ui/
 
 ### Environments
 
-| Ambiente    | `apiUrl`                  | Uso                              |
-|-------------|---------------------------|----------------------------------|
-| Development | `/api` (via proxy)        | `npm start` — proxy resolve CORS |
-| Production  | `http://localhost:8000`   | Docker — browser acessa direto   |
+| Ambiente    | `apiUrl`                | Uso                              |
+| ----------- | ----------------------- | -------------------------------- |
+| Development | `/api` (via proxy)      | `npm start` — proxy resolve CORS |
+| Production  | `http://localhost:8000` | Docker — browser acessa direto   |
 
 ### Proxy (desenvolvimento)
 
@@ -168,14 +168,14 @@ Browser → localhost:4200/api/clients
 
 ## 📊 Métricas do Build
 
-| Métrica               | Valor     |
-|-----------------------|-----------|
-| Bundle inicial        | ~312 kB   |
-| Transfer size (gzip)  | ~86 kB    |
-| Lazy chunks           | 3 chunks  |
-| Imagem Docker final   | ~25 MB    |
-| Framework             | Angular 17.3.12 |
-| Build time (Docker)   | ~3 min    |
+| Métrica              | Valor           |
+| -------------------- | --------------- |
+| Bundle inicial       | ~312 kB         |
+| Transfer size (gzip) | ~86 kB          |
+| Lazy chunks          | 3 chunks        |
+| Imagem Docker final  | ~25 MB          |
+| Framework            | Angular 17.3.12 |
+| Build time (Docker)  | ~3 min          |
 
 ---
 
@@ -185,9 +185,11 @@ Browser → localhost:4200/api/clients
 <summary><strong>Página carrega mas não mostra dados</strong></summary>
 
 A API não está rodando. Verifique:
+
 ```bash
 curl http://localhost:8000/health
 ```
+
 Se não responder, suba a API primeiro: `docker compose up --build`
 
 </details>
@@ -203,9 +205,10 @@ Certifique-se de usar `npm start` (que usa o proxy). Não acesse a API diretamen
 <summary><strong>Porta 4200 já está em uso</strong></summary>
 
 No `docker-compose.yml`, altere a porta:
+
 ```yaml
 ports:
-  - "4201:80"
+  - '4201:80'
 ```
 
 </details>
